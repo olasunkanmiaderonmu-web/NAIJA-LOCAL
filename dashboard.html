@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Seller Dashboard | Naija Local</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div class="row g-4"><div class="col-lg-3" id="sidebar"></div>
+<div class="col-lg-9"><div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><h1 class="h2 mb-0">Seller dashboard</h1><a href="add-product.html" class="btn btn-gold"><i class="bi bi-plus-lg"></i> Add new product</a></div>
+<div id="msg" class="alert d-none" role="alert"></div>
+<div class="row g-3" id="cards"></div>
+<div class="row g-3 mt-1">
+ <div class="col-12"><div class="chart-card"><h2 class="h6">Products listed and sold per week</h2><canvas id="c1" height="110" role="img" aria-label="Products listed and sold per week"></canvas></div></div>
+ <div class="col-lg-6"><div class="chart-card"><h2 class="h6">Engagement: views and enquiries, last 14 days</h2><canvas id="c2" height="170" role="img" aria-label="Views and enquiries by day"></canvas></div></div>
+ <div class="col-lg-6"><div class="chart-card"><h2 class="h6">Best-performing products (views)</h2><canvas id="c3" height="170" role="img" aria-label="Top products by views"></canvas></div></div>
+</div></div></div></main><div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+renderNav(); renderFooter(); renderSidebar('dashboard.html');
+const G = '#198754', GOLD = '#F59E0B', F = '#14532D';
+const fmtD = d => new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' });
+const opts = { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } };
+(async () => {
+  if (!ensureConfigured('msg')) return; const s = await requireAuth(); if (!s) return;
+  const { data: d, error } = await sb.rpc('seller_dashboard');
+  if (error) return showAlert('msg', 'danger', friendlyError(error) + ' Make sure supabase/phase5.sql has been run.');
+  const C = [['Total products listed', d.total, 'box-seam'], ['Active products', d.active, 'check-circle'], ['Products sold', d.sold, 'bag-check'], ['Draft products', d.draft, 'pencil-square'], ['Total views', d.views, 'eye'], ['Total enquiries', d.enquiries, 'chat-dots']];
+  $('cards').innerHTML = C.map(([t, n, i]) => `<div class="col-6 col-md-4"><div class="stat"><i class="bi bi-${i} text-success"></i><div class="n mt-1">${n}</div><div class="text-muted-2 small">${t}</div></div></div>`).join('');
+  new Chart($('c1'), { type: 'bar', data: { labels: d.weekly.map(w => 'Week of ' + fmtD(w.week)), datasets: [{ label: 'Listed', data: d.weekly.map(w => w.listed), backgroundColor: G }, { label: 'Sold', data: d.weekly.map(w => w.sold), backgroundColor: GOLD }] }, options: opts });
+  new Chart($('c2'), { type: 'line', data: { labels: d.daily.map(x => fmtD(x.day)), datasets: [{ label: 'Views', data: d.daily.map(x => x.views), borderColor: G, backgroundColor: G, tension: .3 }, { label: 'Enquiries', data: d.daily.map(x => x.enquiries), borderColor: GOLD, backgroundColor: GOLD, tension: .3 }] }, options: opts });
+  new Chart($('c3'), { type: 'bar', data: { labels: d.top.map(t => t.name.length > 22 ? t.name.slice(0, 21) + '…' : t.name), datasets: [{ label: 'Views', data: d.top.map(t => t.views), backgroundColor: F }] }, options: { ...opts, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
+})();
+</script></body></html>

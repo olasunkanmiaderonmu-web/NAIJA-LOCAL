@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Platform settings | Naija Local Admin</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div class="row g-4"><div class="col-lg-3" id="sidebar"></div><div class="col-lg-9">
+<h1 class="h2 mb-1">Platform settings</h1><p class="text-muted-2">These are public. They show in the site footer and as a banner at the top of every page.</p><div id="msg" class="alert d-none" role="alert"></div>
+<form id="form" class="auth-card" novalidate><div class="row g-3">
+ <div class="col-md-6"><label class="form-label" for="wa">Contact WhatsApp number</label><input id="wa" type="tel" class="form-control" placeholder="0803 123 4567"><div class="invalid-feedback">Enter a valid Nigerian number.</div></div>
+ <div class="col-md-6"><label class="form-label" for="em">Contact email</label><input id="em" type="email" class="form-control" placeholder="hello@yourdomain.com"><div class="invalid-feedback">Enter a valid email.</div></div>
+ <div class="col-12"><label class="form-label" for="an">Announcement banner</label><input id="an" class="form-control" maxlength="160" placeholder="Leave empty to hide the banner"><div class="form-text">Shown at the top of every page. Keep it short.</div></div>
+ <div class="col-12"><button class="btn btn-market" id="save" type="submit">Save settings</button></div></div></form>
+</div></div></main><div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<style>.nav-pills .nav-link{color:var(--forest)}.nav-pills .nav-link.active{background:var(--green);color:#fff}.arow{background:#fff;border:1px solid #f0e6d2;border-radius:1rem;padding:.8rem}</style>
+<script>
+renderNav(); renderFooter(); let uid;
+(async () => {
+  if (!ensureConfigured('msg')) return; const s = await requireAdmin(); if (!s) return; uid = s.user.id; renderAdminSidebar('admin-settings.html');
+  const { data } = await sb.from('platform_settings').select('key,value'); const m = {}; (data || []).forEach(r => m[r.key] = r.value);
+  $('wa').value = m.contact_whatsapp || ''; $('em').value = m.contact_email || ''; $('an').value = m.announcement || '';
+})();
+$('form').addEventListener('submit', async e => {
+  e.preventDefault(); const wa = $('wa').value.trim(), em = $('em').value.trim();
+  const ok = [mark($('wa'), !wa || !!normalizePhone(wa)), mark($('em'), !em || /^\S+@\S+\.\S+$/.test(em))]; if (ok.includes(false)) return;
+  const btn = $('save'); setBusy(btn, true, 'Saving...'); const now = new Date().toISOString();
+  const { error } = await sb.from('platform_settings').upsert([
+    { key: 'contact_whatsapp', value: wa ? normalizePhone(wa) : '', updated_at: now, updated_by: uid },
+    { key: 'contact_email', value: em, updated_at: now, updated_by: uid },
+    { key: 'announcement', value: $('an').value.trim(), updated_at: now, updated_by: uid }]);
+  setBusy(btn, false); if (error) return showAlert('msg', 'danger', friendlyError(error)); showAlert('msg', 'success', 'Settings saved.');
+});
+</script></body></html>

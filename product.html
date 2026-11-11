@@ -1,0 +1,134 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title id="pt">Product | Naija Local</title>
+<style>.mainimg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:1rem;background:#e9e2d0}.gthumb{width:72px;height:72px;object-fit:cover;border-radius:.6rem;border:2px solid transparent;cursor:pointer}.gthumb.on{border-color:var(--gold)}.rel{background:#fff;border:1px solid #f0e6d2;border-radius:1rem;overflow:hidden;display:block;text-decoration:none;color:var(--charcoal);height:100%}.rel img{width:100%;aspect-ratio:4/3;object-fit:cover}</style></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div id="msg" class="alert d-none" role="alert"></div>
+<div id="view" class="d-none"><div class="row g-4">
+ <div class="col-lg-7"><img id="big" class="mainimg" alt=""><div id="thumbs" class="d-flex flex-wrap gap-2 mt-2"></div></div>
+ <div class="col-lg-5">
+  <div id="banner"></div>
+  <h1 class="h2" id="title"></h1>
+  <div class="d-flex align-items-center gap-2 flex-wrap mb-2"><span class="price fs-2" id="price"></span><span id="negBadge" class="badge"></span></div>
+  <div class="mb-3 text-muted-2"><span id="cond"></span> &middot; Quantity: <span id="qty"></span> &middot; <span id="avail"></span></div>
+  <div class="mb-1"><i class="bi bi-geo-alt-fill text-success"></i> <span id="loc"></span></div>
+  <div class="mb-3 small" id="distBox"></div>
+  <div class="d-flex align-items-center gap-2 mb-3"><img id="sAvatar" class="avatar-sm" alt=""><div><div class="fw-bold" id="sName"></div><div class="small text-muted-2">Posted <span id="posted"></span></div></div></div>
+  <div class="d-grid gap-2" id="actions"></div>
+  <div class="d-flex gap-2 mt-2" id="actions2"></div>
+  <button class="btn btn-outline-secondary w-100 mt-2" id="share"><i class="bi bi-share"></i> Share this product</button>
+  <p class="small text-muted-2 mt-3">Naija Local does not guarantee transactions. Inspect the item and avoid paying before you see it. <a href="safety.html">Safety tips</a></p>
+ </div></div>
+ <div class="row mt-4"><div class="col-lg-8"><h2 class="h4">Description</h2><p id="desc" style="white-space:pre-line"></p></div></div>
+ <section class="mt-4 d-none" id="relWrap"><h2 class="h4 mb-3">Related products</h2><div class="row g-3" id="rel"></div></section>
+</div></main>
+<div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+ <div class="modal-header"><h2 class="modal-title h5" id="offerTitle">Make an offer</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+ <div class="modal-body"><div id="offerForm"><p class="small text-muted-2">Listed price: <strong id="offListed"></strong>. Submitting an offer does <strong>not</strong> buy or reserve the product. You and the seller agree the final deal directly.</p>
+  <div id="offMsg" class="alert d-none" role="alert"></div>
+  <label class="form-label" for="offPrice">Your offer (₦)</label><input id="offPrice" type="number" min="1" step="any" class="form-control"><div class="invalid-feedback">Enter an amount above 0.</div>
+  <label class="form-label mt-2" for="offNote">Message (optional)</label><textarea id="offNote" class="form-control" rows="3" maxlength="500"></textarea>
+  <button class="btn btn-market w-100 mt-3" id="offSubmit" type="button">Submit offer</button></div>
+  <div id="offDone" class="d-none"><div class="alert alert-success">Offer recorded and the seller has been notified on Naija Local. Send it on WhatsApp too so they see it quickly.</div>
+   <div class="d-grid gap-2"><a class="btn btn-market" id="offWa" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Send on WhatsApp</a><button class="btn btn-outline-success" id="offCopy" type="button">Copy message</button></div></div></div></div></div></div>
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="repTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+ <div class="modal-header"><h2 class="modal-title h5" id="repTitle">Report this listing</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+ <div class="modal-body"><div id="repMsg" class="alert d-none" role="alert"></div>
+  <label class="form-label" for="repReason">Reason</label><select id="repReason" class="form-select"><option value="">Choose a reason</option><option>Scam or fake product</option><option>Prohibited item</option><option>Misleading price or photos</option><option>Duplicate listing</option><option>Other</option></select><div class="invalid-feedback">Choose a reason.</div>
+  <label class="form-label mt-2" for="repDesc">Details (optional)</label><textarea id="repDesc" class="form-control" rows="3" maxlength="500"></textarea>
+  <button class="btn btn-market w-100 mt-3" id="repSubmit" type="button">Send report</button></div></div></div></div>
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script>
+renderNav(); renderFooter();
+const id = new URLSearchParams(location.search).get('id');
+function setupActions(p, mine, session, link, msg){
+  try { const r = JSON.parse(localStorage.getItem('nl_recent') || '[]').filter(x => x !== p.id); r.unshift(p.id); localStorage.setItem('nl_recent', JSON.stringify(r.slice(0, 12))); } catch (e) {}
+  if (mine) return;
+  $('actions2').innerHTML = `<button class="btn btn-outline-danger flex-fill" type="button" data-fav="${p.id}" aria-pressed="false"><i class="bi bi-heart"></i> Save</button><button class="btn btn-outline-secondary flex-fill" id="reportBtn" type="button"><i class="bi bi-flag"></i> Report</button>`;
+  refreshHearts();
+  $('actions').addEventListener('click', e => {   // record that a contact button was tapped (we cannot see the chat itself)
+    const a = e.target.closest('[data-log]'); if (!a || !session) return;
+    const k = 'q_' + p.id + a.dataset.log; if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1');
+    sb.from('inquiries').insert({ product_id: p.id, buyer_id: session.user.id, seller_id: p.seller_id, contact_method: a.dataset.log }).then(() => {});
+  });
+  const need = fn => () => session ? fn() : goSignin();
+  if ($('offerBtn')) $('offerBtn').onclick = need(() => {
+    $('offListed').textContent = fmtNaira(p.price); $('offerForm').classList.remove('d-none'); $('offDone').classList.add('d-none'); $('offMsg').className = 'alert d-none'; $('offPrice').value = '';
+    bootstrap.Modal.getOrCreateInstance($('offerModal')).show();
+  });
+  $('offSubmit').onclick = async () => {
+    const amt = +$('offPrice').value; if (!mark($('offPrice'), amt > 0)) return;
+    setBusy($('offSubmit'), true, 'Submitting...');
+    const { error } = await sb.from('offers').insert({ product_id: p.id, buyer_id: session.user.id, seller_id: p.seller_id, proposed_price: amt, message: $('offNote').value.trim() || null });
+    if (error) { setBusy($('offSubmit'), false); return showAlert('offMsg', 'danger', friendlyError(error)); }
+    sb.from('inquiries').insert({ product_id: p.id, buyer_id: session.user.id, seller_id: p.seller_id, contact_method: 'offer' }).then(() => {});
+    const note = $('offNote').value.trim();
+    const text = `Hello, I saw your product on Naija Local. I am interested in ${p.product_name}, listed at ${fmtNaira(p.price)}. I would like to offer ${fmtNaira(amt)}. Is this acceptable?${note ? ' ' + note : ''} ${link}`;
+    if (p.whatsapp_number) { $('offWa').href = waLink(p.whatsapp_number, text); $('offWa').classList.remove('d-none'); } else $('offWa').classList.add('d-none');
+    $('offCopy').onclick = async () => { await navigator.clipboard.writeText(text); $('offCopy').textContent = 'Copied'; };
+    setBusy($('offSubmit'), false); $('offerForm').classList.add('d-none'); $('offDone').classList.remove('d-none');
+  };
+  $('reportBtn').onclick = need(() => { $('repMsg').className = 'alert d-none'; bootstrap.Modal.getOrCreateInstance($('reportModal')).show(); });
+  $('repSubmit').onclick = async () => {
+    if (!mark($('repReason'), !!$('repReason').value)) return; setBusy($('repSubmit'), true, 'Sending...');
+    const { error } = await sb.from('reports').insert({ reporter_id: session.user.id, product_id: p.id, reported_user_id: p.seller_id, reason: $('repReason').value, description: $('repDesc').value.trim() || null });
+    setBusy($('repSubmit'), false);
+    if (error) return showAlert('repMsg', 'danger', error.code === '23505' ? 'You have already reported this listing.' : friendlyError(error));
+    showAlert('repMsg', 'success', 'Thank you. Our team will review this listing.'); $('repSubmit').disabled = true;
+  };
+}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function showDistance(p){
+  let loc = null; try { loc = JSON.parse(localStorage.getItem('naija_loc')); } catch (e) {}
+  const box = $('distBox');
+  const run = async l => { const { data } = await sb.rpc('product_distance', { p_id: p.id, p_lat: l.lat, p_lng: l.lng }); box.innerHTML = data != null ? `<i class="bi bi-signpost-2 text-success"></i> <strong>${data} km</strong> from you` : ''; };
+  if (loc && loc.lat) return run(loc);
+  box.innerHTML = '<button class="btn btn-sm btn-outline-success" id="dBtn">Show distance from me</button>';
+  $('dBtn').onclick = () => navigator.geolocation && navigator.geolocation.getCurrentPosition(pos => { const l = { lat: pos.coords.latitude, lng: pos.coords.longitude, label: 'your location' }; localStorage.setItem('naija_loc', JSON.stringify(l)); run(l); }, () => { box.textContent = 'Location is blocked in your browser.'; });
+}
+(async () => {
+  if (!ensureConfigured('msg')) return;
+  if (!UUID.test(id || '')) return showAlert('msg', 'warning', 'Product not found. It may have been removed.');
+  const { data: p } = await sb.from('products').select(PRODUCT_COLS).eq('id', id).maybeSingle();
+  if (!p) return showAlert('msg', 'warning', 'Product not found. It may have been removed.');
+  const { data: { session } } = await sb.auth.getSession(), mine = session && session.user.id === p.seller_id;
+  const [{ data: imgs }, { data: s }, { data: cat }] = await Promise.all([
+    sb.from('product_images').select('image_url').eq('product_id', id).order('display_order'),
+    sb.from('public_profiles').select('full_name,profile_image').eq('id', p.seller_id).maybeSingle(),
+    p.category_id ? sb.from('categories').select('id,name').eq('id', p.category_id).maybeSingle() : Promise.resolve({ data: null })]);
+  document.title = p.product_name + ' | Naija Local'; $('title').textContent = p.product_name;
+  $('price').textContent = fmtNaira(p.price); $('negBadge').textContent = p.negotiable ? 'Negotiable' : 'Fixed price'; $('negBadge').className = 'badge ' + (p.negotiable ? 'text-bg-warning' : 'text-bg-success');
+  $('cond').textContent = p.condition; $('qty').textContent = p.quantity;
+  $('avail').textContent = p.status === 'active' ? 'Available' : p.status === 'sold' ? 'Sold' : 'Unavailable';
+  $('loc').textContent = p.public_location || [p.lga, p.state].filter(Boolean).join(', ');
+  $('sName').innerHTML = `<a class="text-decoration-none" href="seller.html?id=${p.seller_id}">${esc((s && s.full_name) || 'Seller')}</a>`; $('sAvatar').src = (s && s.profile_image) || NO_IMG; $('posted').textContent = timeAgo(p.created_at);
+  $('desc').textContent = p.description || 'No description provided.';
+  if (p.status !== 'active') $('banner').innerHTML = `<div class="alert alert-${p.status === 'sold' ? 'dark' : 'warning'}">This product is ${p.status === 'sold' ? 'sold' : 'currently unavailable'}.</div>`;
+  const urls = (imgs || []).map(i => i.image_url); if (!urls.length) urls.push(p.primary_image || NO_IMG);
+  const setBig = i => { $('big').src = urls[i]; $('big').alt = p.product_name + ' photo ' + (i + 1); document.querySelectorAll('.gthumb').forEach((t, k) => t.classList.toggle('on', k === i)); };
+  $('thumbs').innerHTML = urls.length > 1 ? urls.map((u, i) => `<img class="gthumb" src="${esc(u)}" data-i="${i}" alt="Photo ${i + 1}" loading="lazy">`).join('') : '';
+  $('thumbs').onclick = e => { const t = e.target.closest('[data-i]'); if (t) setBig(+t.dataset.i); }; setBig(0);
+  const link = /^(localhost|127\.0\.0\.1)/.test(location.hostname) ? location.href : location.origin + '/p/' + p.id, msg = `Hello, I saw your product on Naija Local. I am interested in ${p.product_name}, listed at ${fmtNaira(p.price)}. ${link}`;
+  let btns = '';
+  if (mine) btns = `<a class="btn btn-market" href="add-product.html?id=${p.id}">Edit this product</a>`;
+  else if (p.status === 'active') {
+    btns += '<button class="btn btn-gold btn-lg" id="offerBtn" type="button"><i class="bi bi-cash-coin"></i> Make an offer</button>';
+    if (p.whatsapp_number) btns += `<a class="btn btn-market" data-log="whatsapp" target="_blank" rel="noopener" href="${esc(waLink(p.whatsapp_number, msg))}"><i class="bi bi-whatsapp"></i> WhatsApp seller</a>`;
+    if (p.contact_phone) btns += `<a class="btn btn-outline-success" data-log="phone" href="tel:${esc(p.contact_phone)}"><i class="bi bi-telephone"></i> Call seller</a>`;
+    if (p.contact_email) btns += `<a class="btn btn-outline-success" data-log="email" href="mailto:${esc(p.contact_email)}?subject=${encodeURIComponent('Enquiry: ' + p.product_name)}&body=${encodeURIComponent(msg)}"><i class="bi bi-envelope"></i> Email seller</a>`;
+  }
+  $('actions').innerHTML = btns;
+  $('share').onclick = async () => { if (navigator.share) { try { await navigator.share({ title: p.product_name, url: link }); } catch (e) {} } else { await navigator.clipboard.writeText(link); $('share').innerHTML = '<i class="bi bi-check2"></i> Link copied'; } };
+  $('view').classList.remove('d-none'); showDistance(p); setupActions(p, mine, session, link, msg);
+  if (!mine && !sessionStorage.getItem('v_' + id)) { sessionStorage.setItem('v_' + id, '1'); sb.from('product_views').insert({ product_id: id, viewer_id: session ? session.user.id : null }).then(() => {}); }
+  if (p.category_id) {
+    const { data: rel } = await sb.from('products').select('id,product_name,price,primary_image,public_location').eq('category_id', p.category_id).eq('status', 'active').neq('id', id).order('created_at', { ascending: false }).limit(4);
+    if (rel && rel.length) { $('relWrap').classList.remove('d-none'); $('rel').innerHTML = rel.map(r => `<div class="col-6 col-md-3"><a class="rel" href="product.html?id=${r.id}"><img src="${esc(r.primary_image || NO_IMG)}" alt="" loading="lazy"><div class="p-2"><div class="fw-bold small">${esc(r.product_name)}</div><div class="price fs-6">${fmtNaira(r.price)}</div><div class="small text-muted-2">${esc(r.public_location || '')}</div></div></a></div>`).join(''); }
+  }
+})();
+</script></body></html>

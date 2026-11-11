@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>My Profile | Naija Local</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div id="msg" class="alert d-none" role="alert"></div>
+<div class="row g-4">
+ <div class="col-lg-4"><div class="auth-card text-center">
+   <img id="avatar" class="avatar-lg mb-3" alt="Your profile picture" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Crect width='110' height='110' fill='%23e9e2d0'/%3E%3C/svg%3E">
+   <h1 class="h4 mb-1" id="nameView">Loading...</h1>
+   <div class="mb-2"><span class="badge text-bg-success" id="roleView"></span></div>
+   <p class="text-muted-2 small mb-3" id="joined"></p>
+   <label class="btn btn-outline-success btn-sm">Change photo<input id="photo" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
+   <hr><div class="row text-center"><div class="col"><div class="h4 mb-0" id="cActive">-</div><small class="text-muted-2">Published</small></div><div class="col"><div class="h4 mb-0" id="cSold">-</div><small class="text-muted-2">Sold</small></div></div>
+   <div class="d-grid gap-2 mt-3"><a href="my-products.html" class="btn btn-market">My products</a><button id="logout" class="btn btn-outline-secondary">Log out</button></div>
+ </div></div>
+ <div class="col-lg-8 vstack gap-4">
+  <form id="form" class="auth-card" novalidate>
+   <h2 class="h4 mb-3">Personal information</h2>
+   <div class="row g-3">
+    <div class="col-md-6"><label class="form-label" for="fullName">Full name</label><input id="fullName" class="form-control" required><div class="invalid-feedback">Enter your full name.</div></div>
+    <div class="col-md-6"><label class="form-label" for="email">Email</label><input id="email" class="form-control" disabled></div>
+    <div class="col-md-6"><label class="form-label" for="phone">Phone number</label><input id="phone" type="tel" class="form-control" required><div class="invalid-feedback">Enter a valid Nigerian number.</div></div>
+    <div class="col-md-6"><label class="form-label" for="state">State</label><select id="state" class="form-select" required><option value="">Select state</option></select><div class="invalid-feedback">Select your state.</div></div>
+    <div class="col-md-6"><label class="form-label" for="lga">Local Government Area</label><input id="lga" class="form-control" required><div class="invalid-feedback">Enter your LGA.</div></div>
+    <div class="col-md-6"><label class="form-label" for="address">Address</label><input id="address" class="form-control" required><div class="invalid-feedback">Enter your address.</div><div class="form-text">Private. Never shown publicly.</div></div>
+    <div class="col-12"><button id="save" class="btn btn-market" type="submit">Save changes</button></div>
+   </div>
+  </form>
+  <div class="auth-card">
+   <h2 class="h4 mb-3">Location preferences</h2>
+   <p class="text-muted-2 small" id="locState">No saved search location.</p>
+   <div class="row g-3 align-items-end"><div class="col-md-5"><label class="form-label" for="radius">Default search distance</label><select id="radius" class="form-select"><option>5</option><option>10</option><option>20</option><option>30</option><option selected>55</option></select></div>
+    <div class="col-md-7 d-flex gap-2 flex-wrap"><button id="geo" class="btn btn-outline-success" type="button"><i class="bi bi-geo-alt-fill"></i> Use my current location</button><button id="saveLoc" class="btn btn-market" type="button">Save preferences</button></div></div>
+  </div>
+  <form id="pwForm" class="auth-card" novalidate>
+   <h2 class="h4 mb-3">Change password</h2>
+   <div class="row g-3">
+    <div class="col-md-6"><label class="form-label" for="password">New password</label>
+     <div class="pw-wrap"><input id="password" type="password" class="form-control" autocomplete="new-password"><button type="button" class="btn-eye" data-toggle-pw="password" aria-label="Show password"><i class="bi bi-eye"></i></button></div>
+     <div class="strength mt-2"><div id="bar"></div></div><small id="strengthLabel" class="text-muted-2"></small><div class="invalid-feedback">Use at least 8 characters with a letter and a number.</div></div>
+    <div class="col-md-6"><label class="form-label" for="confirm">Confirm new password</label>
+     <div class="pw-wrap"><input id="confirm" type="password" class="form-control" autocomplete="new-password"><button type="button" class="btn-eye" data-toggle-pw="confirm" aria-label="Show password"><i class="bi bi-eye"></i></button></div><div class="invalid-feedback">Passwords do not match.</div></div>
+    <div class="col-12"><button id="pwSave" class="btn btn-market" type="submit">Update password</button></div>
+   </div>
+  </form>
+ </div>
+</div></main>
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script>
+renderNav(); renderFooter(); bindPwToggles(); bindPwStrength($('password'), $('bar'), $('strengthLabel'));
+STATES.forEach(s => $('state').add(new Option(s, s)));
+let uid = null, prefLat = null, prefLng = null;
+
+function paint(p){
+  $('nameView').textContent = p.full_name; $('fullName').value = p.full_name; $('email').value = p.email;
+  $('phone').value = p.phone || ''; $('state').value = p.state || ''; $('lga').value = p.lga || ''; $('address').value = p.address || '';
+  $('roleView').textContent = p.role === 'admin' ? 'Administrator' : p.role === 'seller' ? 'Seller' : 'Buyer';
+  $('joined').textContent = 'Member since ' + new Date(p.created_at).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
+  if (p.profile_image) $('avatar').src = p.profile_image;
+  $('radius').value = String(p.pref_radius_km); prefLat = p.pref_latitude; prefLng = p.pref_longitude;
+  $('locState').textContent = prefLat != null ? 'Saved search location is set.' : 'No saved search location.';
+}
+(async () => {
+  if (!ensureConfigured('msg')) return;
+  const session = await requireAuth(); if (!session) return; uid = session.user.id;
+  const { data: p, error } = await sb.from('profiles').select('*').eq('id', uid).single();
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  if (p.is_suspended) { await sb.auth.signOut(); location.href = 'signin.html'; return; }
+  paint(p);
+  const count = s => sb.from('products').select('id', { count: 'exact', head: true }).eq('seller_id', uid).eq('status', s);
+  const [a, d] = await Promise.all([count('active'), count('sold')]);
+  $('cActive').textContent = a.count ?? 0; $('cSold').textContent = d.count ?? 0;
+})();
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const phone = normalizePhone($('phone').value);
+  const ok = [mark($('fullName'), $('fullName').value.trim().length >= 2), mark($('phone'), !!phone), mark($('state'), !!$('state').value),
+              mark($('lga'), $('lga').value.trim().length >= 2), mark($('address'), $('address').value.trim().length >= 5)];
+  if (ok.includes(false)) return showAlert('msg', 'danger', 'Fix the highlighted fields and try again.');
+  const btn = $('save'); setBusy(btn, true, 'Saving...');
+  const { data, error } = await sb.from('profiles').update({ full_name: $('fullName').value.trim(), phone, state: $('state').value, lga: $('lga').value.trim(), address: $('address').value.trim() }).eq('id', uid).select().single();
+  setBusy(btn, false);
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  paint(data); showAlert('msg', 'success', 'Profile saved.');
+});
+
+$('photo').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (!['image/jpeg','image/png','image/webp'].includes(f.type) || f.size > 2*1024*1024) { e.target.value = ''; return showAlert('msg', 'danger', 'Use a JPG, PNG or WebP image under 2MB.'); }
+  const path = uid + '/avatar.' + f.type.split('/')[1];
+  const up = await sb.storage.from('avatars').upload(path, f, { upsert: true, contentType: f.type });
+  if (up.error) return showAlert('msg', 'danger', friendlyError(up.error));
+  const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+  const { error } = await sb.from('profiles').update({ profile_image: url }).eq('id', uid);
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  $('avatar').src = url; showAlert('msg', 'success', 'Profile picture updated.');
+});
+
+$('geo').addEventListener('click', () => {
+  if (!navigator.geolocation) return showAlert('msg', 'warning', 'This browser does not support location.');
+  $('locState').textContent = 'Finding your location...';
+  navigator.geolocation.getCurrentPosition(pos => { prefLat = pos.coords.latitude; prefLng = pos.coords.longitude; $('locState').textContent = 'Location found. Press Save preferences to keep it.'; },
+    () => { $('locState').textContent = 'Location is blocked. Allow it in your browser settings.'; }, { timeout: 10000 });
+});
+$('saveLoc').addEventListener('click', async () => {
+  const { error } = await sb.from('profiles').update({ pref_latitude: prefLat, pref_longitude: prefLng, pref_radius_km: +$('radius').value }).eq('id', uid);
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  if (prefLat != null) localStorage.setItem('naija_loc', JSON.stringify({ lat: prefLat, lng: prefLng, label: 'your location' }));
+  showAlert('msg', 'success', 'Location preferences saved.');
+});
+
+$('pwForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const pw = $('password').value, ok = pw.length >= 8 && /[A-Za-z]/.test(pw) && /\d/.test(pw);
+  if (![mark($('password'), ok), mark($('confirm'), pw === $('confirm').value)].every(Boolean)) return;
+  const btn = $('pwSave'); setBusy(btn, true, 'Updating...');
+  const { error } = await sb.auth.updateUser({ password: pw });
+  setBusy(btn, false);
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  $('pwForm').reset(); $('bar').style.width = '0'; showAlert('msg', 'success', 'Password updated.');
+});
+$('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.href = 'index.html'; });
+</script></body></html>

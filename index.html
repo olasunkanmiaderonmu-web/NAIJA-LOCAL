@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naija Local | Your Neighbourhood Market, Now Online</title>
+<meta name="description" content="Discover products around you. Buy locally, sell easily and connect directly with sellers in your community.">
+<meta property="og:title" content="Naija Local | Your Neighbourhood Market, Now Online">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet">
+<style>
+:root{
+  --forest:#14532D; --green:#198754; --gold:#F59E0B; --cream:#FFF7E8;
+  --white:#FFFFFF; --charcoal:#242424; --grey:#737373;
+  --bs-body-bg:var(--cream); --bs-body-color:var(--charcoal);
+  --bs-body-font-family:'DM Sans',system-ui,sans-serif; --bs-link-color:var(--green);
+}
+body{background:var(--cream);color:var(--charcoal)}
+h1,h2,h3,h4,h5,.brand{font-family:'Bricolage Grotesque',sans-serif;color:var(--forest);letter-spacing:-.02em}
+.text-muted-2{color:var(--grey)}
+.btn-market{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+.btn-market:hover,.btn-market:focus{background:var(--forest);border-color:var(--forest);color:#fff}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:var(--charcoal);font-weight:700}
+.btn-gold:hover{background:#d98a06;border-color:#d98a06;color:var(--charcoal)}
+.btn{border-radius:.75rem;padding:.65rem 1.25rem}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* navbar */
+.navbar{background:var(--forest)}
+.navbar .brand{color:#fff;font-weight:800;font-size:1.4rem}
+.navbar .brand i{color:var(--gold)}
+.navbar .nav-link{color:rgba(255,255,255,.85);font-weight:500}
+.navbar .nav-link:hover,.navbar .nav-link.active{color:var(--gold)}
+.navbar-toggler{border-color:rgba(255,255,255,.4)}
+.navbar-toggler-icon{filter:invert(1)}
+
+/* hero */
+.hero{background:var(--forest);color:#fff;position:relative;overflow:hidden;padding:3.5rem 0 5.5rem}
+.hero h1{color:#fff;font-weight:800;font-size:clamp(2.2rem,5.5vw,4rem);line-height:1.05}
+.hero p.lead{color:rgba(255,255,255,.85);max-width:34rem}
+.searchbar{background:#fff;border-radius:1rem;padding:.5rem;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.searchbar .form-control,.searchbar .form-select{border:0;box-shadow:none;background:transparent}
+.searchbar .divider{border-left:1px solid #e5e5e5}
+.stall{position:relative;max-width:420px;margin:0 auto}
+.awning{display:block;width:100%;height:auto;position:relative;z-index:2;filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+.stall-body{margin-top:-34px;padding:46px 16px 0;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);border-radius:0 0 1rem 1rem;overflow:hidden}
+.stall-sign{text-align:center;color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:.03em;margin-bottom:.8rem}
+.shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:12px;margin-bottom:12px;border-bottom:6px solid #b9803f}
+.tile{background:#fff;border-radius:.8rem;padding:.7rem .3rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.2rem;color:var(--charcoal);font-size:.75rem;font-weight:700;animation:bob 4s ease-in-out infinite}
+.tile i{font-size:1.8rem;color:var(--c)}
+.shelf .tile:nth-child(2){animation-delay:-1.3s}.shelf .tile:nth-child(3){animation-delay:-2.6s}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.counter{background:#f3e3c3;color:var(--forest);font-weight:700;text-align:center;padding:.65rem;margin:0 -16px}
+.fchip{position:absolute;z-index:3;background:#fff;color:var(--forest);font-weight:700;font-size:.8rem;padding:.35rem .75rem;border-radius:2rem;box-shadow:0 6px 14px rgba(0,0,0,.3)}
+.fchip.c1{top:104px;right:-8px}.fchip.c2{top:232px;left:-10px;background:var(--gold);color:var(--charcoal)}.fchip.c3{bottom:-14px;right:12px;background:var(--green);color:#fff}
+@media (max-width:575px){.fchip.c1{right:0}.fchip.c2{left:0}}
+.near-chips .chip{border-color:var(--green);color:var(--forest);background:#fff}
+.near-chips .chip.active{background:var(--green);border-color:var(--green);color:#fff}
+.chip{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:2rem;padding:.3rem .9rem;font-size:.9rem}
+.chip.active{background:var(--gold);border-color:var(--gold);color:var(--charcoal);font-weight:700}
+.stripe{height:8px;background:linear-gradient(90deg,var(--green) 0 33%,#fff 33% 66%,var(--green) 66%)}
+
+/* sections */
+section{padding:4rem 0}
+.section-title{font-weight:800;font-size:clamp(1.6rem,3.2vw,2.3rem)}
+.cat-card{background:#fff;border-radius:1rem;padding:1.25rem .75rem;text-align:center;display:block;color:var(--charcoal);text-decoration:none;border:1px solid #f0e6d2;height:100%;transition:border-color .2s,background .2s}
+.cat-card:hover{border-color:var(--green);background:#f3fbf6;color:var(--forest)}
+.cat-card i{font-size:1.9rem;color:var(--green)}
+.cat-card span{display:block;font-weight:600;font-size:.9rem;margin-top:.4rem}
+.pcard{background:#fff;border-radius:1rem;overflow:hidden;border:1px solid #f0e6d2;height:100%;display:flex;flex-direction:column}
+.pimg{aspect-ratio:4/3;display:grid;place-items:center;font-size:3rem;color:rgba(255,255,255,.9);position:relative}
+.pimg .badge{position:absolute;top:.6rem;left:.6rem}
+.badge-neg{background:var(--gold);color:var(--charcoal)}
+.badge-fix{background:var(--forest);color:#fff}
+.price{font-family:'Bricolage Grotesque';font-weight:800;color:var(--forest);font-size:1.25rem}
+.pmeta{color:var(--grey);font-size:.85rem}
+.dist{color:var(--green);font-weight:700}
+.howstep{background:#fff;border-radius:1rem;padding:1.75rem;height:100%;border-left:6px solid var(--gold)}
+.howstep i{font-size:2rem;color:var(--green)}
+.sell-band{background:var(--forest);color:#fff;border-radius:1.5rem;padding:3rem 2rem}
+.sell-band h2{color:#fff}
+.sell-band li{margin-bottom:.4rem}
+footer{background:var(--forest);color:rgba(255,255,255,.8);padding:3rem 0 1.5rem}
+footer h6{color:var(--gold);font-family:'DM Sans';font-weight:700}
+footer a{color:rgba(255,255,255,.8);text-decoration:none}
+footer a:hover{color:var(--gold)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg sticky-top" aria-label="Main navigation">
+  <div class="container">
+    <a class="navbar-brand brand" href="index.html"><i class="bi bi-shop-window"></i> Naija Local</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav mx-lg-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="explore.html">Explore Products</a></li>
+        <li class="nav-item"><a class="nav-link" href="categories.html">Categories</a></li>
+        <li class="nav-item"><a class="nav-link" href="add-product.html">Sell a Product</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html">Contact Us</a></li>
+      </ul>
+      <!-- Phase 2: swap this block for profile picture + account menu when signed in -->
+      <div id="authLinks" class="d-flex gap-2">
+        <a class="btn btn-outline-light btn-sm" href="signin.html">Sign In</a>
+        <a class="btn btn-gold btn-sm" href="signup.html">Sign Up</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <h1>Your Neighbourhood Market, Now Online.</h1>
+        <p class="lead my-3">Discover amazing products around you. Buy locally, sell easily and connect directly with sellers in your community.</p>
+        <form class="searchbar row g-0 align-items-center mt-4" action="explore.html" method="get" role="search">
+          <div class="col-12 col-md-5"><label class="visually-hidden" for="q">Search products</label>
+            <input id="q" name="q" type="search" class="form-control form-control-lg" placeholder="What are you looking for?"></div>
+          <div class="col-12 col-md-4 divider"><label class="visually-hidden" for="state">Location</label>
+            <select id="state" name="state" class="form-select form-select-lg"><option value="">Near me (55km)</option></select></div>
+          <div class="col-12 col-md-3 p-1"><button class="btn btn-market w-100 py-2" type="submit"><i class="bi bi-search"></i> Search</button></div>
+        </form>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <a href="explore.html" class="btn btn-gold">Browse Products</a>
+          <a href="add-product.html" class="btn btn-outline-light">Start Selling</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="stall" aria-hidden="true">
+          <svg class="awning" viewBox="0 0 420 92" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h60v56a30 30 0 0 1-60 0z" fill="#F59E0B"/><path d="M60 0h60v56a30 30 0 0 1-60 0z" fill="#FFF7E8"/><path d="M120 0h60v56a30 30 0 0 1-60 0z" fill="#F59E0B"/><path d="M180 0h60v56a30 30 0 0 1-60 0z" fill="#FFF7E8"/><path d="M240 0h60v56a30 30 0 0 1-60 0z" fill="#F59E0B"/><path d="M300 0h60v56a30 30 0 0 1-60 0z" fill="#FFF7E8"/><path d="M360 0h60v56a30 30 0 0 1-60 0z" fill="#F59E0B"/></svg>
+          <div class="stall-body">
+            <div class="stall-sign">NAIJA LOCAL MARKET</div>
+            <div class="shelf"><div class="tile"><i class="bi bi-phone" style="--c:#198754"></i><span>Phones</span></div><div class="tile"><i class="bi bi-handbag" style="--c:#F59E0B"></i><span>Bags</span></div><div class="tile"><i class="bi bi-basket" style="--c:#14532D"></i><span>Food</span></div></div>
+            <div class="shelf"><div class="tile"><i class="bi bi-laptop" style="--c:#14532D"></i><span>Laptops</span></div><div class="tile"><i class="bi bi-cup-straw" style="--c:#198754"></i><span>Drinks</span></div><div class="tile"><i class="bi bi-house-door" style="--c:#F59E0B"></i><span>Furniture</span></div></div>
+            <div class="counter"><i class="bi bi-people-fill"></i> Buy local. Sell easy.</div>
+          </div>
+          <span class="fchip c1"><i class="bi bi-geo-alt-fill"></i> Near you</span>
+          <span class="fchip c2"><i class="bi bi-tag-fill"></i> Negotiable</span>
+          <span class="fchip c3"><i class="bi bi-whatsapp"></i> Chat on WhatsApp</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="stripe"></div>
+
+<!-- CATEGORIES -->
+<section id="categories">
+  <div class="container">
+    <h2 class="section-title mb-4">Shop by category</h2>
+    <div class="row g-3" id="catGrid"></div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section id="featured" class="pt-0 d-none"><div class="container"><h2 class="section-title mb-4">Featured products</h2><div class="row g-3" id="featGrid"></div></div></section>
+
+<!-- NEAR YOU -->
+<section id="near" class="pt-0">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+      <div>
+        <h2 class="section-title mb-1">Products near you</h2>
+        <p class="text-muted-2 mb-0" id="locStatus">Looking for products near you...</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-market" id="useLoc" type="button"><i class="bi bi-geo-alt-fill"></i> Set my location</button>
+        <a class="btn btn-outline-success" href="explore.html">See all</a>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3 near-chips" id="radiusChips" role="group" aria-label="Search distance"></div>
+    <div class="row g-3" id="nearGrid" aria-live="polite"></div>
+    <div id="nearEmpty" class="text-center py-5 d-none">
+      <i class="bi bi-compass fs-1 text-muted-2"></i>
+      <p class="fw-bold mb-1">No products this close yet.</p>
+      <p class="text-muted-2">Try a wider distance to see more listings.</p>
+      <button class="btn btn-market" id="expand" type="button">Search within 55km</button>
+    </div>
+    
+  </div>
+</section>
+
+<!-- NEW + POPULAR -->
+<section class="bg-white">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-6"><h2 class="section-title mb-3">Newly listed</h2><div id="newList" class="vstack gap-2"></div></div>
+      <div class="col-lg-6"><h2 class="section-title mb-3">Popular right now</h2><div id="popList" class="vstack gap-2"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="container">
+    <h2 class="section-title mb-4 text-center">How it works</h2>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="howstep"><i class="bi bi-binoculars"></i><h3 class="h5 mt-2">1. Discover</h3><p class="mb-0 text-muted-2">Find products around your neighbourhood.</p></div></div>
+      <div class="col-md-4"><div class="howstep"><i class="bi bi-whatsapp"></i><h3 class="h5 mt-2">2. Connect</h3><p class="mb-0 text-muted-2">Contact sellers directly by WhatsApp or email.</p></div></div>
+      <div class="col-md-4"><div class="howstep"><i class="bi bi-chat-left-dots"></i><h3 class="h5 mt-2">3. Negotiate</h3><p class="mb-0 text-muted-2">Agree on a price and arrange your purchase.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BECOME A SELLER -->
+<section class="pt-0">
+  <div class="container">
+    <div class="sell-band">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <h2 class="section-title">Got something to sell? Put it in front of your neighbours.</h2>
+          <ul class="list-unstyled mt-3 mb-0">
+            <li><i class="bi bi-check-circle-fill text-warning"></i> Post with photos, your price and your pickup location</li>
+            <li><i class="bi bi-check-circle-fill text-warning"></i> Buyers reach you directly on WhatsApp</li>
+            <li><i class="bi bi-check-circle-fill text-warning"></i> Track views and enquiries from your dashboard</li>
+          </ul>
+        </div>
+        <div class="col-lg-4 text-lg-end"><a href="add-product.html" class="btn btn-gold btn-lg">Become a seller</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4"><div class="brand text-white fs-4 mb-2"><i class="bi bi-shop-window text-warning"></i> Naija Local</div>
+        <p>A community marketplace where Nigerians buy and sell within their neighbourhood. Naija Local connects buyers and sellers but does not guarantee transactions.</p></div>
+      <div class="col-6 col-lg-2"><h6>Explore</h6><ul class="list-unstyled"><li><a href="explore.html">Explore Products</a></li><li><a href="categories.html">Categories</a></li><li><a href="add-product.html">Sell a Product</a></li></ul></div>
+      <div class="col-6 col-lg-3"><h6>Help</h6><ul class="list-unstyled"><li><a href="safety.html">Safety Guidelines</a></li><li><a href="privacy.html">Privacy Policy</a></li><li><a href="terms.html">Terms and Conditions</a></li><li><a href="about.html">About Us</a></li></ul></div>
+      <div class="col-lg-3"><h6>Contact</h6><ul class="list-unstyled">
+        <li><a href="https://wa.me/2340000000000"><i class="bi bi-whatsapp"></i> WhatsApp us</a></li>
+        <li><a href="mailto:hello@naijalocal.ng"><i class="bi bi-envelope"></i> hello@naijalocal.ng</a></li></ul>
+        <div class="fs-4 d-flex gap-3"><a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a><a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a><a href="#" aria-label="X"><i class="bi bi-twitter-x"></i></a></div></div>
+    </div>
+    <hr class="border-light opacity-25 my-4">
+    <p class="small mb-0">&copy; <span id="yr"></span> Naija Local. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>updateAuthLinks(); applySettings();</script>
+<script src="location.js"></script>
+<script>
+const RADII = [5, 10, 20, 30, 55];
+let center = null, radius = 55, near = [];
+STATES.forEach(s => $('state').add(new Option(s, s)));
+$('yr').textContent = new Date().getFullYear();
+$('radiusChips').innerHTML = RADII.map(r => `<button type="button" class="chip" data-r="${r}" aria-pressed="false">${r}km</button>`).join('');
+
+/* categories: from the database, falling back to the built-in list */
+(async () => {
+  let list = CATEGORY_META.map(c => ({ slug: c[0], name: c[2] }));
+  if (CONFIGURED) { const { data } = await sb.from('categories').select('name,slug').eq('is_active', true).order('name'); if (data && data.length) list = data; }
+  $('catGrid').innerHTML = list.map(c => `<div class="col-6 col-md-4 col-lg-3 col-xl-2">${categoryCard(c)}</div>`).join('');
+})();
+
+function drawNear(){
+  const list = near.filter(p => p.distance_km <= radius), empty = $('nearEmpty');
+  $('nearGrid').innerHTML = list.slice(0, 8).map(p => `<div class="col-6 col-lg-3">${productCard(p)}</div>`).join('');
+  if (!center) {
+    empty.classList.remove('d-none');
+    empty.innerHTML = '<i class="bi bi-geo-alt fs-1 text-success"></i><p class="fw-bold mb-1">Where should we look?</p><p class="text-muted-2">Share your location or choose your area to see products near you.</p><button class="btn btn-market" id="emptyLoc">Set my location</button>';
+    $('emptyLoc').onclick = pickLocation; $('locStatus').textContent = 'Tell us where you are to see products within 55km.';
+  } else {
+    empty.classList.toggle('d-none', list.length > 0);
+    empty.innerHTML = radius < 55
+      ? '<i class="bi bi-compass fs-1 text-muted-2"></i><p class="fw-bold mb-1">No products this close yet.</p><p class="text-muted-2">Try a wider distance to see more listings.</p><button class="btn btn-market" id="expand">Search within 55km</button>'
+      : '<i class="bi bi-compass fs-1 text-muted-2"></i><p class="fw-bold mb-1">No products within 55km yet.</p><p class="text-muted-2">Be the first to list something in your area.</p><a class="btn btn-gold" href="add-product.html">Sell a product</a>';
+    if ($('expand')) $('expand').onclick = () => { radius = 55; drawNear(); };
+    $('locStatus').textContent = `Showing products within ${radius}km of ${center.label}.`;
+  }
+  document.querySelectorAll('#radiusChips .chip').forEach(c => { const on = +c.dataset.r === radius; c.classList.toggle('active', on); c.setAttribute('aria-pressed', on); });
+}
+async function loadNear(){
+  near = [];
+  if (center && CONFIGURED) {
+    const { data } = await sb.rpc('nearby_products', { p_lat: center.lat, p_lng: center.lng, p_radius_km: 55, p_sort: 'nearest', p_limit: 50, p_offset: 0 });
+    near = data || [];
+  }
+  drawNear();
+}
+function pickLocation(){ openLocationModal(l => { center = l; loadNear(); }); }
+$('useLoc').onclick = pickLocation;
+$('radiusChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { radius = +b.dataset.r; drawNear(); } });
+
+/* newly listed + popular: real data */
+(async () => {
+  const none = '<p class="text-muted-2 mb-0">Nothing listed yet. <a href="add-product.html">Be the first to sell.</a></p>';
+  if (!CONFIGURED) { $('newList').innerHTML = $('popList').innerHTML = '<p class="text-muted-2 mb-0">Connect Supabase to see listings.</p>'; return; }
+  const [n, p] = await Promise.all([
+    sb.from('products').select('id,product_name,price,primary_image,public_location').eq('status', 'active').order('created_at', { ascending: false }).limit(4),
+    sb.rpc('popular_products', { p_limit: 4 })]);
+  $('newList').innerHTML = n.data && n.data.length ? n.data.map(miniRow).join('') : none;
+  $('popList').innerHTML = p.data && p.data.length ? p.data.map(miniRow).join('') : none;
+})();
+
+(async () => {
+  if (!CONFIGURED) return;
+  const { data } = await sb.from('featured_products').select('position,products!inner(id,product_name,price,primary_image,public_location,negotiable,condition,status)').eq('products.status', 'active').order('position').limit(8);
+  if (data && data.length) { $('featGrid').innerHTML = data.map(f => `<div class="col-6 col-lg-3">${productCard(f.products)}</div>`).join(''); $('featured').classList.remove('d-none'); }
+})();
+(async () => { center = await initialLoc(); loadNear(); })();
+</script>
+</body>
+</html>

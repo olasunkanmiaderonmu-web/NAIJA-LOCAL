@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Reports | Naija Local Admin</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div class="row g-4"><div class="col-lg-3" id="sidebar"></div><div class="col-lg-9">
+<h1 class="h2 mb-1">Reports</h1><p class="text-muted-2">Review what users have reported and decide what to do.</p><div id="msg" class="alert d-none" role="alert"></div>
+<ul class="nav nav-pills mb-3" id="tabs"><li class="nav-item"><button class="nav-link active" data-s="open">Open</button></li><li class="nav-item"><button class="nav-link" data-s="reviewed">Reviewed</button></li><li class="nav-item"><button class="nav-link" data-s="actioned">Actioned</button></li><li class="nav-item"><button class="nav-link" data-s="dismissed">Dismissed</button></li></ul>
+<div id="list" class="vstack gap-2"></div><div id="status" class="text-center py-3"></div>
+</div></div></main><div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<style>.nav-pills .nav-link{color:var(--forest)}.nav-pills .nav-link.active{background:var(--green);color:#fff}.arow{background:#fff;border:1px solid #f0e6d2;border-radius:1rem;padding:.8rem}</style>
+<script>
+renderNav(); renderFooter();
+let tab = 'open', rows = [], names = {};
+function draw(){
+  document.querySelectorAll('#tabs .nav-link').forEach(b => b.classList.toggle('active', b.dataset.s === tab));
+  $('status').innerHTML = rows.length ? '' : '<p class="text-muted-2">Nothing here.</p>';
+  $('list').innerHTML = rows.map(r => `<div class="arow"><div class="d-flex flex-wrap justify-content-between gap-2"><div>
+   <strong>${esc(r.reason)}</strong> <span class="badge text-bg-secondary">${r.status}</span>
+   <div>${r.products ? `Listing: <a href="product.html?id=${r.products.id}" target="_blank">${esc(r.products.product_name)}</a> <span class="badge text-bg-${r.products.status === 'active' ? 'success' : 'danger'}">${r.products.status}</span>` : ''}</div>
+   <div class="small">Seller: ${esc(names[r.reported_user_id] || '-')} &middot; Reported by: ${esc(names[r.reporter_id] || '-')} &middot; ${timeAgo(r.created_at)}</div>
+   ${r.description ? `<div class="mt-1">"${esc(r.description)}"</div>` : ''}</div>
+   <div class="d-flex flex-wrap gap-1 align-items-start justify-content-end">${r.status === 'open' || r.status === 'reviewed' ? `
+    ${r.status === 'open' ? `<button class="btn btn-sm btn-outline-secondary" data-a="reviewed" data-id="${r.id}">Mark reviewed</button>` : ''}
+    ${r.products && r.products.status === 'active' ? `<button class="btn btn-sm btn-outline-danger" data-a="listing" data-id="${r.id}">Suspend listing</button>` : ''}
+    ${r.reported_user_id ? `<button class="btn btn-sm btn-outline-danger" data-a="seller" data-id="${r.id}">Suspend seller</button>` : ''}
+    <button class="btn btn-sm btn-outline-success" data-a="dismissed" data-id="${r.id}">Dismiss</button>` : ''}</div></div></div>`).join('');
+}
+async function load(){
+  $('status').innerHTML = '<div class="spinner-border text-success" role="status"></div>';
+  const { data, error } = await sb.from('reports').select('id,reason,description,status,created_at,reporter_id,reported_user_id,product_id,products(id,product_name,status)').eq('status', tab).order('created_at', { ascending: false }).limit(100);
+  if (error) { $('status').innerHTML = ''; return showAlert('msg', 'danger', friendlyError(error)); }
+  rows = data || [];
+  const ids = [...new Set(rows.flatMap(r => [r.reporter_id, r.reported_user_id]).filter(Boolean))];
+  if (ids.length) { const { data: pr } = await sb.from('profiles').select('id,full_name').in('id', ids); (pr || []).forEach(p => names[p.id] = p.full_name); }
+  draw();
+}
+const setStatus = (id, status) => sb.from('reports').update({ status }).eq('id', id);
+$('list').addEventListener('click', async e => {
+  const b = e.target.closest('[data-a]'); if (!b) return; const r = rows.find(x => x.id === b.dataset.id), a = b.dataset.a; let err;
+  if (a === 'listing') {
+    if (!await confirmBox('Suspend this listing?', `"${r.products.product_name}" will be hidden from buyers and the seller will be notified.`, 'Suspend listing')) return;
+    ({ error: err } = await sb.from('products').update({ status: 'suspended' }).eq('id', r.product_id)); if (!err) ({ error: err } = await setStatus(r.id, 'actioned'));
+  } else if (a === 'seller') {
+    if (!await confirmBox('Suspend this seller?', `${names[r.reported_user_id] || 'This user'} will be suspended and all their listings hidden.`, 'Suspend seller')) return;
+    ({ error: err } = await sb.from('profiles').update({ is_suspended: true }).eq('id', r.reported_user_id)); if (!err) ({ error: err } = await setStatus(r.id, 'actioned'));
+  } else ({ error: err } = await setStatus(r.id, a));
+  if (err) return showAlert('msg', 'danger', friendlyError(err)); load();
+});
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) { tab = b.dataset.s; load(); } });
+(async () => { if (!ensureConfigured('msg')) return; const s = await requireAdmin(); if (!s) return; renderAdminSidebar('admin-reports.html'); load(); })();
+</script></body></html>

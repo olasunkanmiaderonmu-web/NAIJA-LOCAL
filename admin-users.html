@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Users | Naija Local Admin</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4"><div class="row g-4"><div class="col-lg-3" id="sidebar"></div><div class="col-lg-9">
+<h1 class="h2 mb-3">User management</h1><div id="msg" class="alert d-none" role="alert"></div>
+<div class="row g-2 mb-3"><div class="col-md-6"><label class="visually-hidden" for="q">Search users</label><input id="q" type="search" class="form-control" placeholder="Search by name or email"></div>
+<div class="col-6 col-md-3"><label class="visually-hidden" for="fr">Role</label><select id="fr" class="form-select"><option value="">All roles</option><option value="buyer">Buyers</option><option value="seller">Sellers</option><option value="admin">Admins</option></select></div>
+<div class="col-6 col-md-3"><label class="visually-hidden" for="fs">Status</label><select id="fs" class="form-select"><option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select></div></div>
+<div id="list" class="vstack gap-2"></div><div id="status" class="text-center py-3"></div><div class="text-center"><button class="btn btn-outline-success d-none" id="more" type="button">Load more</button></div>
+<div class="modal fade" id="uModal" tabindex="-1" aria-labelledby="uTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="uTitle">User details</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" id="uBody"></div></div></div></div>
+</div></div></main><div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<style>.nav-pills .nav-link{color:var(--forest)}.nav-pills .nav-link.active{background:var(--green);color:#fff}.arow{background:#fff;border:1px solid #f0e6d2;border-radius:1rem;padding:.8rem}</style>
+<script>
+renderNav(); renderFooter();
+const PAGE = 30; let offset = 0, rows = [], openReps = {}, token = 0;
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+function draw(){
+  $('list').innerHTML = rows.map(u => `<div class="arow d-flex flex-wrap gap-2 align-items-center"><div class="flex-grow-1" style="min-width:200px"><strong>${esc(u.full_name)}</strong>
+   <span class="badge text-bg-${u.role === 'admin' ? 'dark' : u.role === 'seller' ? 'success' : 'secondary'}">${u.role}</span>
+   ${u.is_suspended ? '<span class="badge text-bg-danger">suspended</span>' : ''}${openReps[u.id] ? `<span class="badge text-bg-warning">${openReps[u.id]} open report${openReps[u.id] > 1 ? 's' : ''}</span>` : ''}
+   <div class="small text-muted-2">${esc(u.email)} &middot; ${esc(u.state || '-')} &middot; joined ${new Date(u.created_at).toLocaleDateString('en-NG')}</div></div>
+   <div class="d-flex gap-1"><button class="btn btn-sm btn-outline-success" data-v="${u.id}">View</button>
+   ${u.role === 'admin' ? '' : u.is_suspended ? `<button class="btn btn-sm btn-market" data-s="${u.id}" data-to="0">Reactivate</button>` : `<button class="btn btn-sm btn-outline-danger" data-s="${u.id}" data-to="1">Suspend</button>`}</div></div>`).join('');
+}
+async function load(reset){
+  if (reset) { offset = 0; rows = []; token++; } const mine = token;
+  $('status').innerHTML = '<div class="spinner-border text-success" role="status"></div>';
+  let qb = sb.from('profiles').select('id,full_name,email,phone,state,lga,address,role,is_suspended,created_at').order('created_at', { ascending: false }).range(offset, offset + PAGE - 1);
+  const q = $('q').value.trim().replace(/[%_,()]/g, ''); if (q) qb = qb.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
+  if ($('fr').value) qb = qb.eq('role', $('fr').value); if ($('fs').value) qb = qb.eq('is_suspended', $('fs').value === 'suspended');
+  const { data, error } = await qb; if (mine !== token) return; $('status').innerHTML = '';
+  if (error) return showAlert('msg', 'danger', friendlyError(error));
+  rows = rows.concat(data); offset += data.length; $('more').classList.toggle('d-none', data.length < PAGE);
+  if (!rows.length) $('status').innerHTML = '<p class="text-muted-2">No users match.</p>'; draw();
+}
+$('list').addEventListener('click', async e => {
+  const v = e.target.closest('[data-v]'), s = e.target.closest('[data-s]');
+  if (v) {
+    const u = rows.find(x => x.id === v.dataset.v);
+    const cnt = st => sb.from('products').select('id', { count: 'exact', head: true }).eq('seller_id', u.id).eq('status', st);
+    const [a, d] = await Promise.all([cnt('active'), cnt('sold')]);
+    $('uBody').innerHTML = `<dl class="row mb-2"><dt class="col-4">Name</dt><dd class="col-8">${esc(u.full_name)}</dd><dt class="col-4">Email</dt><dd class="col-8">${esc(u.email)}</dd><dt class="col-4">Phone</dt><dd class="col-8">${esc(u.phone || '-')}</dd>
+     <dt class="col-4">Location</dt><dd class="col-8">${esc([u.lga, u.state].filter(Boolean).join(', ') || '-')}</dd><dt class="col-4">Address</dt><dd class="col-8">${esc(u.address || '-')}</dd>
+     <dt class="col-4">Role</dt><dd class="col-8">${u.role}</dd><dt class="col-4">Status</dt><dd class="col-8">${u.is_suspended ? 'Suspended' : 'Active'}</dd><dt class="col-4">Listings</dt><dd class="col-8">${a.count || 0} active, ${d.count || 0} sold</dd></dl>
+     <a class="btn btn-outline-success btn-sm" href="admin-products.html?seller=${u.id}">See their listings</a> <a class="btn btn-outline-success btn-sm" href="seller.html?id=${u.id}">Public profile</a>`;
+    bootstrap.Modal.getOrCreateInstance($('uModal')).show();
+  }
+  if (s) {
+    const u = rows.find(x => x.id === s.dataset.s), to = s.dataset.to === '1';
+    if (!await confirmBox(to ? 'Suspend this account?' : 'Reactivate this account?', to ? `${u.full_name} will be signed out of selling and all their listings will be hidden.` : `${u.full_name} will be able to use the platform again and their listings return.`, to ? 'Suspend' : 'Reactivate')) return;
+    const { error } = await sb.from('profiles').update({ is_suspended: to }).eq('id', u.id);
+    if (error) return showAlert('msg', 'danger', friendlyError(error)); u.is_suspended = to; draw();
+  }
+});
+$('more').onclick = () => load(false);
+[$('fr'), $('fs')].forEach(el => el.addEventListener('change', () => load(true))); $('q').addEventListener('input', debounce(() => load(true), 400));
+(async () => {
+  if (!ensureConfigured('msg')) return; const s = await requireAdmin(); if (!s) return; renderAdminSidebar('admin-users.html');
+  const { data } = await sb.from('reports').select('reported_user_id').eq('status', 'open').not('reported_user_id', 'is', null);
+  (data || []).forEach(r => openReps[r.reported_user_id] = (openReps[r.reported_user_id] || 0) + 1); load(true);
+})();
+</script></body></html>

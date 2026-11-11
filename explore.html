@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Explore Products | Naija Local</title></head><body>
+<div id="site-nav"></div>
+<main class="container py-4">
+<h1 class="h2 mb-3">Explore products near you</h1>
+<div id="msg" class="alert d-none" role="alert"></div>
+<div class="row g-4">
+ <div class="col-lg-3">
+  <button class="btn btn-outline-success d-lg-none w-100 mb-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#filters"><i class="bi bi-sliders"></i> Filters</button>
+  <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="filters" aria-labelledby="fTitle">
+   <div class="offcanvas-header"><h2 class="offcanvas-title h5" id="fTitle">Filters</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#filters" aria-label="Close"></button></div>
+   <div class="offcanvas-body"><div class="auth-card w-100 vstack gap-3" style="padding:1.25rem">
+    <div><label class="form-label" for="fCat">Category</label><select id="fCat" class="form-select"><option value="">All categories</option></select></div>
+    <div><label class="form-label">Price (₦)</label><div class="d-flex gap-2"><input id="fMin" type="number" min="0" class="form-control" placeholder="Min" aria-label="Minimum price"><input id="fMax" type="number" min="0" class="form-control" placeholder="Max" aria-label="Maximum price"></div></div>
+    <div><label class="form-label" for="fCond">Condition</label><select id="fCond" class="form-select"><option value="">Any</option><option>Brand New</option><option>Fairly Used</option><option>Used</option><option>Refurbished</option></select></div>
+    <div><label class="form-label" for="fNeg">Pricing</label><select id="fNeg" class="form-select"><option value="">Negotiable or fixed</option><option value="1">Negotiable only</option><option value="0">Fixed price only</option></select></div>
+    <div><label class="form-label" for="fR">Distance</label><select id="fR" class="form-select"><option value="5">Within 5 km</option><option value="10">Within 10 km</option><option value="20">Within 20 km</option><option value="30">Within 30 km</option><option value="55" selected>Within 55 km</option></select></div>
+    <button class="btn btn-outline-secondary" id="clear" type="button">Clear filters</button>
+   </div></div>
+  </div>
+ </div>
+ <div class="col-lg-9">
+  <div class="row g-2 mb-2">
+   <div class="col-md-8"><label class="visually-hidden" for="q">Search products</label><input id="q" type="search" list="sugg" class="form-control" placeholder="Search by product, description, seller or place" autocomplete="off"><datalist id="sugg"></datalist></div>
+   <div class="col-md-4"><label class="visually-hidden" for="sort">Sort by</label><select id="sort" class="form-select"><option value="nearest">Nearest first</option><option value="newest">Newest</option><option value="price_asc">Lowest price</option><option value="price_desc">Highest price</option></select></div>
+  </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div id="locBar" class="text-muted-2"></div><button class="btn btn-sm btn-market" id="changeLoc" type="button"><i class="bi bi-geo-alt-fill"></i> Change location</button></div>
+  <div class="row g-3" id="grid" aria-live="polite"></div>
+  <div id="status" class="text-center py-4"></div>
+  <div class="text-center"><button class="btn btn-outline-success d-none" id="more" type="button">Load more</button></div>
+ </div>
+</div></main><div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script><script src="location.js"></script>
+<script>
+renderNav('explore.html'); renderFooter();
+const PAGE = 12; let loc = null, offset = 0, busy = false, cats = [], token = 0, shown = 0;
+const F = { q: $('q'), cat: $('fCat'), min: $('fMin'), max: $('fMax'), cond: $('fCond'), neg: $('fNeg'), r: $('fR'), sort: $('sort') };
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+function syncUrl(){
+  const p = new URLSearchParams(), c = cats.find(x => x.id === F.cat.value);
+  if (F.q.value.trim()) p.set('q', F.q.value.trim()); if (c) p.set('category', c.slug);
+  if (F.min.value) p.set('min', F.min.value); if (F.max.value) p.set('max', F.max.value);
+  if (F.cond.value) p.set('cond', F.cond.value); if (F.neg.value) p.set('neg', F.neg.value);
+  if (F.r.value !== '55') p.set('r', F.r.value); if (F.sort.value !== 'nearest') p.set('sort', F.sort.value);
+  history.replaceState(null, '', 'explore.html' + (p.toString() ? '?' + p : ''));
+}
+function locBar(){ $('locBar').textContent = loc ? `Within ${F.r.value} km of ${loc.label}` : 'Set your location to see products near you'; }
+function askLocation(){ openLocationModal(l => { loc = l; run(true); }); }
+$('changeLoc').onclick = askLocation;
+
+async function run(reset){
+  locBar();
+  if (!ensureConfigured('msg')) return;
+  if (!loc) { $('grid').innerHTML = ''; $('more').classList.add('d-none');
+    $('status').innerHTML = '<i class="bi bi-geo-alt fs-1 text-success"></i><p class="fw-bold mb-1">Where should we look?</p><p class="text-muted-2">We show products within 55 km of you. Tell us where you are.</p><button class="btn btn-market" id="setLoc">Set my location</button>';
+    $('setLoc').onclick = askLocation; return; }
+  const mn = F.min.value, mx = F.max.value;
+  if (mn && mx && +mn > +mx) return showAlert('msg', 'warning', 'Minimum price is higher than the maximum price.');
+  $('msg').className = 'alert d-none';
+  if (reset) { offset = 0; shown = 0; $('grid').innerHTML = ''; token++; syncUrl(); }
+  if (busy && !reset) return; busy = true; const mine = token;
+  $('status').innerHTML = '<div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading</span></div>'; $('more').classList.add('d-none');
+  const { data, error } = await sb.rpc('nearby_products', { p_lat: loc.lat, p_lng: loc.lng, p_radius_km: +F.r.value, p_search: F.q.value.trim() || null,
+    p_category: F.cat.value || null, p_min_price: mn || null, p_max_price: mx || null, p_negotiable: F.neg.value === '' ? null : F.neg.value === '1',
+    p_condition: F.cond.value || null, p_sort: F.sort.value, p_limit: PAGE, p_offset: offset });
+  if (mine !== token) return; busy = false;
+  if (error) { $('status').innerHTML = ''; return showAlert('msg', 'danger', friendlyError(error)); }
+  $('grid').insertAdjacentHTML('beforeend', data.map(p => `<div class="col-6 col-xl-4">${productCard(p)}</div>`).join(''));
+  offset += data.length; shown += data.length; $('status').innerHTML = '';
+  if (!shown) {
+    $('status').innerHTML = `<i class="bi bi-compass fs-1 text-muted-2"></i><p class="fw-bold mb-1">No products found nearby.</p><p class="text-muted-2">Try a wider distance or fewer filters.</p>
+     ${F.r.value !== '55' ? '<button class="btn btn-market me-2" id="wide">Search within 55 km</button>' : ''}<button class="btn btn-outline-success" id="clr2">Clear filters</button>`;
+    if ($('wide')) $('wide').onclick = () => { F.r.value = '55'; run(true); }; $('clr2').onclick = clearAll;
+  }
+  $('more').classList.toggle('d-none', data.length < PAGE);
+}
+function clearAll(){ F.q.value = F.min.value = F.max.value = ''; F.cat.value = F.cond.value = F.neg.value = ''; F.r.value = '55'; F.sort.value = 'nearest'; run(true); }
+$('clear').onclick = clearAll; $('more').onclick = () => run(false);
+[F.cat, F.cond, F.neg, F.r, F.sort].forEach(el => el.addEventListener('change', () => run(true)));
+[F.q, F.min, F.max].forEach(el => el.addEventListener('input', debounce(() => run(true), 450)));
+F.q.addEventListener('input', debounce(async () => {
+  const v = F.q.value.trim().replace(/[%_,()]/g, ''); if (v.length < 2 || !sb) return;
+  const { data } = await sb.from('products').select('product_name').eq('status', 'active').ilike('product_name', `%${v}%`).limit(6);
+  $('sugg').innerHTML = [...new Set((data || []).map(d => d.product_name))].map(n => `<option value="${esc(n)}">`).join('');
+}, 250));
+
+(async () => {
+  if (CONFIGURED) {
+    const { data } = await sb.from('categories').select('id,name,slug').eq('is_active', true).order('name'); cats = data || [];
+    cats.forEach(c => F.cat.add(new Option(c.name, c.id)));
+  }
+  const p = new URLSearchParams(location.search), c = cats.find(x => x.slug === p.get('category'));
+  F.q.value = p.get('q') || ''; if (c) F.cat.value = c.id; F.min.value = p.get('min') || ''; F.max.value = p.get('max') || '';
+  F.cond.value = p.get('cond') || ''; F.neg.value = p.get('neg') || ''; F.sort.value = p.get('sort') || 'nearest';
+  if (['5', '10', '20', '30', '55'].includes(p.get('r'))) F.r.value = p.get('r');
+  const st = p.get('state');
+  if (st && stateLoc(st)) { loc = stateLoc(st); saveLoc(loc); } else loc = await initialLoc();
+  run(true);
+})();
+</script></body></html>

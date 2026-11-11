@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="style.css" rel="stylesheet"><title>Email Verified | Naija Local</title></head><body>
+<div id="site-nav"></div>
+<main class="auth-wrap"><div class="container"><div class="row justify-content-center"><div class="col-md-8 col-lg-5">
+<div class="auth-card text-center" aria-live="polite">
+ <div id="loading"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Checking</span></div><p class="mt-3 mb-0">Confirming your email...</p></div>
+ <div id="ok" class="d-none"><i class="bi bi-patch-check-fill text-success" style="font-size:4rem"></i>
+  <h1 class="h2 mt-2">Email verified!</h1><p id="okText" class="text-muted-2"></p>
+  <div class="d-grid gap-2" id="okBtns"></div></div>
+ <div id="bad" class="d-none"><i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:4rem"></i>
+  <h1 class="h3 mt-2">We could not verify this link</h1><p id="badText" class="text-muted-2"></p>
+  <div class="d-grid gap-2"><a class="btn btn-market" href="signin.html">Go to sign in</a><a class="btn btn-outline-success" href="signup.html">Create an account again</a></div></div>
+</div></div></div></div></main>
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script>
+renderNav(); renderFooter();
+const hash = new URLSearchParams(location.hash.slice(1)), qs = new URLSearchParams(location.search);
+const urlError = hash.get('error_description') || qs.get('error_description'), wasSignup = ['signup', 'email_change', 'magiclink'].includes(hash.get('type'));
+const show = id => { ['loading', 'ok', 'bad'].forEach(x => $(x).classList.toggle('d-none', x !== id)); };
+async function finish(){
+  if (!CONFIGURED) { show('bad'); $('badText').textContent = 'Supabase is not connected yet. Add your keys to config.js.'; return; }
+  if (urlError) {
+    show('bad'); const m = urlError.toLowerCase();
+    $('badText').textContent = m.includes('expired') || m.includes('invalid') ? 'This link has expired or was already used. If you already verified, just sign in. Otherwise sign up again to get a new link.' : urlError.replace(/\+/g, ' ');
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    const { data: p } = await sb.from('profiles').select('full_name').eq('id', session.user.id).maybeSingle();
+    $('okText').textContent = `Thank you${p ? ', ' + p.full_name.split(' ')[0] : ''}. Your email is confirmed and you are now signed in.`;
+    $('okBtns').innerHTML = '<a class="btn btn-market" href="explore.html">Start exploring</a><a class="btn btn-outline-success" href="profile.html">Go to my profile</a>';
+    updateAuthLinks();
+  } else if (wasSignup) {
+    $('okText').textContent = 'Your email is confirmed. Please sign in to continue.';
+    $('okBtns').innerHTML = '<a class="btn btn-market" href="signin.html">Sign in</a>';
+  } else { show('bad'); $('badText').textContent = 'There is nothing to verify on this page. If you already verified your email, sign in.'; return; }
+  show('ok'); history.replaceState(null, '', location.pathname);
+}
+setTimeout(finish, 1200);   // gives Supabase a moment to read the sign-in details from the link
+</script></body></html>

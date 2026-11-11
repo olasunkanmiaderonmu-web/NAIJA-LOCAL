@@ -1,0 +1,382 @@
+:root {
+    --forest: #14532D;
+    --green: #198754;
+    --gold: #F59E0B;
+    --cream: #FFF7E8;
+    --white: #FFFFFF;
+    --charcoal: #242424;
+    --grey: #737373;
+    --bs-body-bg: var(--cream);
+    --bs-body-color: var(--charcoal);
+    --bs-body-font-family: 'DM Sans', system-ui, sans-serif;
+    --bs-link-color: var(--green)
+}
+
+body {
+    background: var(--cream);
+    color: var(--charcoal)
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+.brand {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    color: var(--forest);
+    letter-spacing: -.02em
+}
+
+.text-muted-2 {
+    color: var(--grey)
+}
+
+.btn {
+    border-radius: .75rem;
+    padding: .65rem 1.25rem
+}
+
+.btn-market {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    font-weight: 700
+}
+
+.btn-market:hover,
+.btn-market:focus {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: #fff
+}
+
+.btn-gold {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--charcoal);
+    font-weight: 700
+}
+
+.btn-gold:hover {
+    background: #d98a06;
+    border-color: #d98a06;
+    color: var(--charcoal)
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px
+}
+
+.form-control,
+.form-select {
+    border-radius: .65rem;
+    padding: .65rem .9rem
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 .2rem rgba(25, 135, 84, .2)
+}
+
+.form-check-input:checked {
+    background-color: var(--green);
+    border-color: var(--green)
+}
+
+.navbar {
+    background: var(--forest)
+}
+
+.navbar .brand {
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.4rem
+}
+
+.navbar .brand i {
+    color: var(--gold)
+}
+
+.navbar .nav-link {
+    color: rgba(255, 255, 255, .85);
+    font-weight: 500
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    color: var(--gold)
+}
+
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, .4)
+}
+
+.navbar-toggler-icon {
+    filter: invert(1)
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover
+}
+
+.avatar-lg {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e9e2d0
+}
+
+.stripe {
+    height: 8px;
+    background: linear-gradient(90deg, var(--green) 0 33%, #fff 33% 66%, var(--green) 66%)
+}
+
+.auth-wrap {
+    min-height: calc(100vh - 220px);
+    padding: 2.5rem 0
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    border: 1px solid #f0e6d2;
+    box-shadow: 0 10px 30px rgba(20, 83, 45, .08)
+}
+
+.strength {
+    height: 6px;
+    border-radius: 4px;
+    background: #eee;
+    overflow: hidden
+}
+
+.strength>div {
+    height: 100%;
+    width: 0;
+    transition: width .25s, background .25s
+}
+
+.pw-wrap {
+    position: relative
+}
+
+.pw-wrap .btn-eye {
+    position: absolute;
+    right: .4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: var(--grey);
+    padding: .3rem .6rem
+}
+
+.pw-wrap input {
+    padding-right: 2.8rem
+}
+
+footer.site-footer {
+    background: var(--forest);
+    color: rgba(255, 255, 255, .8);
+    padding: 2rem 0
+}
+
+footer.site-footer a {
+    color: rgba(255, 255, 255, .8);
+    text-decoration: none
+}
+
+footer.site-footer a:hover {
+    color: var(--gold)
+}
+
+@media (prefers-reduced-motion:reduce) {
+    * {
+        transition: none !important
+    }
+}
+
+.pcard {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid #f0e6d2;
+    height: 100%;
+    display: flex;
+    flex-direction: column
+}
+
+.pcard img.pi {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    background: #e9e2d0
+}
+
+.ptitle {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--charcoal);
+    font-weight: 700
+}
+
+.badge-neg {
+    background: var(--gold);
+    color: var(--charcoal)
+}
+
+.badge-fix {
+    background: var(--forest);
+    color: #fff
+}
+
+.price {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    color: var(--forest);
+    font-size: 1.25rem
+}
+
+.pmeta {
+    color: var(--grey);
+    font-size: .85rem
+}
+
+.dist {
+    color: var(--green);
+    font-weight: 700
+}
+
+.cat-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.25rem .75rem;
+    text-align: center;
+    display: block;
+    color: var(--charcoal);
+    text-decoration: none;
+    border: 1px solid #f0e6d2;
+    height: 100%;
+    transition: border-color .2s, background .2s
+}
+
+.cat-card:hover {
+    border-color: var(--green);
+    background: #f3fbf6;
+    color: var(--forest)
+}
+
+.cat-card i {
+    font-size: 1.9rem;
+    color: var(--green)
+}
+
+.cat-card span {
+    display: block;
+    font-weight: 600;
+    font-size: .9rem;
+    margin-top: .4rem
+}
+
+.fav-btn {
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, .95);
+    color: var(--charcoal);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2)
+}
+
+[data-fav].on {
+    color: #dc3545
+}
+
+.btn[data-fav].on {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: #fff
+}
+
+.side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    background: #fff;
+    border: 1px solid #f0e6d2;
+    border-radius: 1rem;
+    padding: .5rem
+}
+
+.side-nav a,
+.side-nav button {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .8rem;
+    border-radius: .6rem;
+    color: var(--charcoal);
+    text-decoration: none;
+    border: 0;
+    background: none;
+    text-align: left;
+    font-weight: 500
+}
+
+.side-nav a:hover,
+.side-nav button:hover {
+    background: #f3fbf6;
+    color: var(--forest)
+}
+
+.side-nav a.active {
+    background: var(--green);
+    color: #fff
+}
+
+.stat {
+    background: #fff;
+    border: 1px solid #f0e6d2;
+    border-radius: 1rem;
+    padding: 1rem;
+    height: 100%
+}
+
+.stat .n {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--forest);
+    line-height: 1
+}
+
+.chart-card {
+    background: #fff;
+    border: 1px solid #f0e6d2;
+    border-radius: 1rem;
+    padding: 1rem
+}
+
+.announce {
+    background: var(--gold);
+    color: var(--charcoal);
+    text-align: center;
+    padding: .5rem 1rem;
+    font-weight: 600
+}

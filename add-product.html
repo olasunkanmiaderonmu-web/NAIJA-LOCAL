@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+  <style>
+    #map {
+      height: 300px;
+      border-radius: .75rem;
+      border: 1px solid #ddd
+    }
+
+    .thumb {
+      position: relative;
+      border-radius: .75rem;
+      overflow: hidden;
+      background: #fff;
+      border: 2px solid #f0e6d2
+    }
+
+    .thumb img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block
+    }
+
+    .thumb.primary {
+      border-color: var(--gold)
+    }
+
+    .thumb .bar {
+      display: flex;
+      justify-content: space-between;
+      padding: .25rem
+    }
+
+    .thumb .badge-p {
+      position: absolute;
+      top: .4rem;
+      left: .4rem
+    }
+  </style>
+  <title id="pageTitle">Add a Product | Naija Local</title>
+</head>
+
+<body>
+  <div id="site-nav"></div>
+  <main class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <h1 class="h2" id="heading">Sell a product</h1>
+        <p class="text-muted-2">Fill in the details, add photos and set where buyers can collect it.</p>
+        <div id="msg" class="alert d-none" role="alert"></div>
+        <form id="form" class="auth-card" novalidate>
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label" for="name">Product name</label><input id="name"
+                class="form-control" maxlength="120" required>
+              <div class="invalid-feedback">Enter a name of at least 3 characters.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="category">Category</label><select id="category"
+                class="form-select" required>
+                <option value="">Select category</option>
+              </select>
+              <div class="invalid-feedback">Choose a category.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="condition">Condition</label><select id="condition"
+                class="form-select" required>
+                <option value="">Select condition</option>
+                <option>Brand New</option>
+                <option>Fairly Used</option>
+                <option>Used</option>
+                <option>Refurbished</option>
+              </select>
+              <div class="invalid-feedback">Choose the condition.</div>
+            </div>
+            <div class="col-12"><label class="form-label" for="description">Description</label><textarea
+                id="description" class="form-control" rows="4" maxlength="4000" required></textarea>
+              <div class="invalid-feedback">Describe the product (at least 10 characters).</div>
+            </div>
+            <div class="col-md-4"><label class="form-label" for="price">Price (₦)</label><input id="price" type="number"
+                min="0" step="any" class="form-control" required>
+              <div class="invalid-feedback">Enter a valid price.</div>
+            </div>
+            <div class="col-md-4"><label class="form-label" for="quantity">Quantity</label><input id="quantity"
+                type="number" min="1" step="1" value="1" class="form-control" required>
+              <div class="invalid-feedback">Enter a quantity of 1 or more.</div>
+            </div>
+            <div class="col-md-4"><label class="form-label d-block">Pricing</label>
+              <div class="form-check form-check-inline mt-2"><input class="form-check-input" type="radio" name="neg"
+                  id="negY" value="1" checked><label class="form-check-label" for="negY">Negotiable</label></div>
+              <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="neg"
+                  id="negN" value="0"><label class="form-check-label" for="negN">Fixed</label></div>
+            </div>
+
+            <div class="col-12">
+              <hr>
+              <h2 class="h5">Photos</h2><input id="files" type="file" class="form-control"
+                accept="image/jpeg,image/png,image/webp" multiple>
+              <div class="form-text">Up to 8 photos, JPG, PNG or WebP, 5MB each. The first photo is the main one. Photos
+                are compressed automatically.</div>
+              <div class="text-danger small mt-1 d-none" id="imgErr"></div>
+              <div class="row g-2 mt-1" id="thumbs"></div>
+            </div>
+
+            <div class="col-12">
+              <hr>
+              <h2 class="h5">Where can buyers find it?</h2>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="state">State</label><select id="state"
+                class="form-select" required>
+                <option value="">Select state</option>
+              </select>
+              <div class="invalid-feedback">Select the state.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="lga">Local Government Area</label><input id="lga"
+                class="form-control" required>
+              <div class="invalid-feedback">Enter the LGA.</div>
+            </div>
+            <div class="col-12"><label class="form-label" for="publicLoc">Location shown to buyers</label><input
+                id="publicLoc" class="form-control" placeholder="e.g. Ikeja, Lagos" maxlength="80" required>
+              <div class="invalid-feedback">Enter the area to show buyers.</div>
+              <div class="form-text">Use an area or town, not your house address.</div>
+            </div>
+            <div class="col-12">
+              <div class="d-flex flex-wrap gap-2 mb-2 align-items-center"><button type="button"
+                  class="btn btn-outline-success" id="geo"><i class="bi bi-geo-alt-fill"></i> Use my current
+                  location</button><span class="small text-muted-2">or tap the map / drag the pin to the pickup
+                  spot.</span></div>
+              <div id="map" role="application" aria-label="Map to choose pickup location"></div>
+              <div id="pointInfo" class="small mt-1 text-muted-2">No pickup point chosen yet.</div>
+              <div class="text-danger small d-none" id="pointErr">Choose the pickup point on the map.</div>
+              <div class="form-text">Your exact pin is never shown publicly. Buyers only see the area above and the
+                distance.</div>
+            </div>
+
+            <div class="col-12">
+              <hr>
+              <h2 class="h5">Contact details buyers will see</h2>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="whatsapp">WhatsApp number</label><input id="whatsapp"
+                type="tel" class="form-control" placeholder="0803 123 4567">
+              <div class="invalid-feedback">Enter a valid Nigerian WhatsApp number.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="phone">Contact phone</label><input id="phone"
+                type="tel" class="form-control" placeholder="0803 123 4567">
+              <div class="invalid-feedback">Enter a valid Nigerian number.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="email">Email (optional)</label><input id="email"
+                type="email" class="form-control">
+              <div class="invalid-feedback">Enter a valid email.</div>
+            </div>
+            <div class="col-md-6"><label class="form-label" for="availability">Availability</label><select
+                id="availability" class="form-select">
+                <option value="active">Available</option>
+                <option value="unavailable">Unavailable</option>
+              </select></div>
+
+            <div class="col-12 d-flex flex-wrap gap-2 pt-2"><button class="btn btn-market" type="submit"
+                id="publish">Publish product</button><button class="btn btn-outline-success" type="button"
+                id="draft">Save as draft</button><a class="btn btn-outline-secondary" href="my-products.html">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    renderNav('add-product.html'); renderFooter();
+    STATES.forEach(s => $('state').add(new Option(s, s)));
+    let uid = null, productId = new URLSearchParams(location.search).get('id'), lat = null, lng = null, map, marker, images = [], removed = [];
+    const MAX = 8;
+
+    /* ---- map ---- */
+    function showPoint() { $('pointInfo').textContent = 'Pickup point chosen. Drag the pin to adjust.'; $('pointErr').classList.add('d-none'); }
+    function setPoint(a, b, zoom) {
+      lat = a; lng = b;
+      if (!marker) { marker = L.marker([a, b], { draggable: true }).addTo(map); marker.on('dragend', () => { const p = marker.getLatLng(); lat = p.lat; lng = p.lng; showPoint(); }); }
+      else marker.setLatLng([a, b]);
+      if (zoom) map.setView([a, b], 15); showPoint();
+    }
+    map = L.map('map').setView([6.5244, 3.3792], 11);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    map.on('click', e => setPoint(e.latlng.lat, e.latlng.lng));
+    $('geo').onclick = () => {
+      if (!navigator.geolocation) return showAlert('msg', 'warning', 'This browser does not support location. Tap the map instead.');
+      navigator.geolocation.getCurrentPosition(p => setPoint(p.coords.latitude, p.coords.longitude, true),
+        () => showAlert('msg', 'warning', 'Location is blocked. Allow it in your browser settings, or tap the map instead.'), { timeout: 10000 });
+    };
+
+    /* ---- images ---- */
+    function drawThumbs() {
+      $('thumbs').innerHTML = images.map((im, i) => `<div class="col-6 col-md-3"><div class="thumb ${i === 0 ? 'primary' : ''}">
+    ${i === 0 ? '<span class="badge badge-p bg-warning text-dark">Main</span>' : ''}<img src="${esc(im.url)}" alt="Photo ${i + 1}">
+    <div class="bar">${i === 0 ? '<span></span>' : `<button type="button" class="btn btn-sm btn-light" data-main="${i}">Make main</button>`}
+    <button type="button" class="btn btn-sm btn-light text-danger" data-del="${i}" aria-label="Remove photo ${i + 1}"><i class="bi bi-trash"></i></button></div></div></div>`).join('');
+    }
+    $('thumbs').addEventListener('click', e => {
+      const m = e.target.closest('[data-main]'), d = e.target.closest('[data-del]');
+      if (m) { const [x] = images.splice(+m.dataset.main, 1); images.unshift(x); }
+      if (d) { const [x] = images.splice(+d.dataset.del, 1); if (x.path) removed.push(x.path); else if (x.file) URL.revokeObjectURL(x.url); }
+      drawThumbs();
+    });
+    $('files').addEventListener('change', e => {
+      const err = $('imgErr'); err.classList.add('d-none');
+      for (const f of e.target.files) {
+        if (images.length >= MAX) { err.textContent = 'You can add up to 8 photos.'; err.classList.remove('d-none'); break; }
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(f.type)) { err.textContent = f.name + ' is not a JPG, PNG or WebP image.'; err.classList.remove('d-none'); continue; }
+        if (f.size > 5 * 1024 * 1024) { err.textContent = f.name + ' is bigger than 5MB.'; err.classList.remove('d-none'); continue; }
+        images.push({ file: f, url: URL.createObjectURL(f) });
+      }
+      e.target.value = ''; drawThumbs();
+    });
+    const pathOf = u => decodeURIComponent(u.split('/product-images/')[1].split('?')[0]);
+
+    /* ---- read + validate ---- */
+    function read() {
+      return {
+        name: $('name').value.trim(), category: $('category').value, condition: $('condition').value, description: $('description').value.trim(),
+        price: $('price').value, quantity: $('quantity').value, negotiable: document.querySelector('input[name=neg]:checked').value === '1',
+        state: $('state').value, lga: $('lga').value.trim(), publicLoc: $('publicLoc').value.trim(),
+        whatsapp: normalizePhone($('whatsapp').value), phone: $('phone').value.trim() ? normalizePhone($('phone').value) : null, email: $('email').value.trim()
+      };
+    }
+    function validate(d, publish) {
+      const base = [mark($('name'), d.name.length >= 3), mark($('condition'), !!d.condition), mark($('price'), d.price !== '' && +d.price >= 0)];
+      if (!publish) return !base.includes(false);
+      const ok = [...base, mark($('category'), !!d.category), mark($('description'), d.description.length >= 10), mark($('quantity'), +d.quantity >= 1),
+      mark($('state'), !!d.state), mark($('lga'), d.lga.length >= 2), mark($('publicLoc'), d.publicLoc.length >= 2),
+      mark($('whatsapp'), !!d.whatsapp), mark($('phone'), !$('phone').value.trim() || !!d.phone), mark($('email'), !d.email || /^\S+@\S+\.\S+$/.test(d.email))];
+      const hasPoint = lat !== null; $('pointErr').classList.toggle('d-none', hasPoint);
+      const hasImg = images.length > 0; $('imgErr').textContent = 'Add at least one photo to publish.'; $('imgErr').classList.toggle('d-none', hasImg);
+      return !ok.includes(false) && hasPoint && hasImg;
+    }
+
+    /* ---- save ---- */
+    async function syncImages(id) {
+      const urls = [];
+      for (const im of images) {
+        if (im.file) {
+          const blob = await compressImage(im.file), path = `${uid}/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const up = await sb.storage.from('product-images').upload(path, blob, { contentType: 'image/jpeg' }); if (up.error) throw up.error;
+          im.url = sb.storage.from('product-images').getPublicUrl(path).data.publicUrl; im.path = path; im.file = null;
+        }
+        urls.push(im.url);
+      }
+      if (removed.length) { await sb.storage.from('product-images').remove(removed); removed = []; }
+      let r = await sb.from('product_images').delete().eq('product_id', id); if (r.error) throw r.error;
+      if (urls.length) { r = await sb.from('product_images').insert(urls.map((u, i) => ({ product_id: id, image_url: u, display_order: i }))); if (r.error) throw r.error; }
+      r = await sb.from('products').update({ primary_image: urls[0] || null }).eq('id', id); if (r.error) throw r.error;
+    }
+    async function save(publish) {
+      if (!ensureConfigured('msg')) return;
+      const d = read(); if (!validate(d, publish)) return showAlert('msg', 'danger', 'Fix the highlighted fields and try again.');
+      const status = publish ? $('availability').value : 'draft', btn = publish ? $('publish') : $('draft');
+      setBusy(btn, true, publish ? 'Publishing...' : 'Saving...');
+      const row = {
+        category_id: d.category || null, product_name: d.name, description: d.description, price: +d.price, negotiable: d.negotiable, condition: d.condition,
+        quantity: +d.quantity || 1, status, latitude: lat, longitude: lng, state: d.state || null, lga: d.lga || null, public_location: d.publicLoc || null,
+        contact_phone: d.phone, whatsapp_number: d.whatsapp, contact_email: d.email || null
+      };
+      try {
+        if (!productId) {
+          const { data, error } = await sb.from('products').insert({ seller_id: uid, ...row }).select('id').single(); if (error) throw error;
+          productId = data.id; history.replaceState(null, '', 'add-product.html?id=' + productId);
+        } else { const { error } = await sb.from('products').update(row).eq('id', productId); if (error) throw error; }
+        await syncImages(productId);
+        showAlert('msg', 'success', publish ? 'Your product is published. Taking you to your products...' : 'Draft saved. Taking you to your products...');
+        setTimeout(() => location.href = 'my-products.html', 1200);
+      } catch (err) { setBusy(btn, false); showAlert('msg', 'danger', friendlyError(err) + (productId ? ' Your details were saved, press the button again to retry the photos.' : '')); }
+    }
+    $('form').addEventListener('submit', e => { e.preventDefault(); save(true); });
+    $('draft').onclick = () => save(false);
+
+    /* ---- start ---- */
+    (async () => {
+      if (!ensureConfigured('msg')) return;
+      const session = await requireAuth(); if (!session) return; uid = session.user.id;
+      const { data: cats } = await sb.from('categories').select('id,name').eq('is_active', true).order('name');
+      (cats || []).forEach(c => $('category').add(new Option(c.name, c.id)));
+      const { data: me } = await sb.from('profiles').select('state,lga,phone,email,is_suspended').eq('id', uid).single();
+      if (me && me.is_suspended) { await sb.auth.signOut(); location.href = 'signin.html'; return; }
+      if (!productId) { if (me) { $('state').value = me.state || ''; $('lga').value = me.lga || ''; $('whatsapp').value = me.phone || ''; $('phone').value = me.phone || ''; } return; }
+      $('heading').textContent = 'Edit product'; $('publish').textContent = 'Save and publish';
+      const { data: p } = await sb.from('products').select(PRODUCT_COLS).eq('id', productId).maybeSingle();
+      if (!p || p.seller_id !== uid) { $('form').classList.add('d-none'); return showAlert('msg', 'danger', 'This product was not found, or it does not belong to you.'); }
+      $('name').value = p.product_name; $('category').value = p.category_id || ''; $('condition').value = p.condition; $('description').value = p.description;
+      $('price').value = p.price; $('quantity').value = p.quantity; (p.negotiable ? $('negY') : $('negN')).checked = true;
+      $('state').value = p.state || ''; $('lga').value = p.lga || ''; $('publicLoc').value = p.public_location || '';
+      $('whatsapp').value = p.whatsapp_number || ''; $('phone').value = p.contact_phone || ''; $('email').value = p.contact_email || '';
+      $('availability').value = p.status === 'unavailable' ? 'unavailable' : 'active';
+      const { data: c } = await sb.rpc('get_product_coords', { p_id: productId }); if (c && c[0] && c[0].latitude !== null) setPoint(c[0].latitude, c[0].longitude, true);
+      const { data: imgs } = await sb.from('product_images').select('image_url').eq('product_id', productId).order('display_order');
+      images = (imgs || []).map(i => ({ url: i.image_url, path: pathOf(i.image_url) })); drawThumbs();
+      if (p.status === 'sold') showAlert('msg', 'info', 'This product is marked as sold. Publishing it again will put it back on the marketplace.');
+    })();
+  </script>
+</body>
+
+</html>
