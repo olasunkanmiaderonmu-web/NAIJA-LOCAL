@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><script>try{var _k=[].concat(Object.keys(localStorage),Object.keys(sessionStorage));if(_k.some(function(x){return /^sb-.+-auth-token$/.test(x)}))document.documentElement.className+=' has-session'}catch(e){}</script><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#14532D"><link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Naija Local"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -9,7 +9,7 @@
 <form id="form" class="auth-card" novalidate><div class="row g-3">
  <div class="col-md-6"><label class="form-label" for="wa">Contact WhatsApp number</label><input id="wa" type="tel" class="form-control" placeholder="0803 123 4567"><div class="invalid-feedback">Enter a valid Nigerian number.</div></div>
  <div class="col-md-6"><label class="form-label" for="em">Contact email</label><input id="em" type="email" class="form-control" placeholder="hello@yourdomain.com"><div class="invalid-feedback">Enter a valid email.</div></div>
- <div class="col-12"><label class="form-label" for="an">Announcement banner</label><input id="an" class="form-control" maxlength="160" placeholder="Leave empty to hide the banner"><div class="form-text">Shown at the top of every page. Keep it short.</div></div>
+ <div class="col-12"><label class="form-label" for="an">Announcement banner</label><input id="an" class="form-control" maxlength="160" placeholder="Leave empty to hide the banner"><div class="form-text">Shown at the top of every page. Keep it short.</div><div id="prev" class="mt-2 rounded-3 overflow-hidden" aria-label="Preview"></div></div>
  <div class="col-12"><button class="btn btn-market" id="save" type="submit">Save settings</button></div></div></form>
 </div></div></main><div id="site-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -21,7 +21,9 @@ renderNav(); renderFooter(); let uid;
 (async () => {
   if (!ensureConfigured('msg')) return; const s = await requireAdmin(); if (!s) return; uid = s.user.id; renderAdminSidebar('admin-settings.html');
   const { data } = await sb.from('platform_settings').select('key,value'); const m = {}; (data || []).forEach(r => m[r.key] = r.value);
-  $('wa').value = m.contact_whatsapp || ''; $('em').value = m.contact_email || ''; $('an').value = m.announcement || '';
+  const showPrev = () => { const t = $('an').value.trim(); $('prev').innerHTML = t ? tickerHTML(t) : '<div class="small text-muted-2">No banner will be shown.</div>'; };
+  $('an').addEventListener('input', showPrev);
+  $('wa').value = m.contact_whatsapp || ''; $('em').value = m.contact_email || ''; $('an').value = m.announcement || ''; showPrev();
 })();
 $('form').addEventListener('submit', async e => {
   e.preventDefault(); const wa = $('wa').value.trim(), em = $('em').value.trim();
@@ -31,6 +33,6 @@ $('form').addEventListener('submit', async e => {
     { key: 'contact_whatsapp', value: wa ? normalizePhone(wa) : '', updated_at: now, updated_by: uid },
     { key: 'contact_email', value: em, updated_at: now, updated_by: uid },
     { key: 'announcement', value: $('an').value.trim(), updated_at: now, updated_by: uid }]);
-  setBusy(btn, false); if (error) return showAlert('msg', 'danger', friendlyError(error)); showAlert('msg', 'success', 'Settings saved.');
+  setBusy(btn, false); if (error) return showAlert('msg', 'danger', friendlyError(error)); try { localStorage.setItem('nl_announce', $('an').value.trim()); } catch (e) {} showAlert('msg', 'success', 'Settings saved. The banner is now live on every page.');
 });
 </script></body></html>

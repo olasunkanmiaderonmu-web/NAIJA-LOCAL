@@ -44,3 +44,11 @@ function openLocationModal(onApply){
   };
   modal.show();
 }
+
+/* nearest state (by its capital) to a point: used when nothing is listed within 55 km */
+function haversineKm(a, b, c, d){ const R = 6371, t = x => x * Math.PI / 180, dl = t(c - a), dn = t(d - b); const h = Math.sin(dl / 2) ** 2 + Math.cos(t(a)) * Math.cos(t(c)) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+function nearestState(l){
+  if (!l) return null; let best = null, bd = 1e9;
+  for (const [name, c] of Object.entries(STATE_COORDS)) { const d = haversineKm(l.lat, l.lng, c[0], c[1]); if (d < bd) { bd = d; best = name; } }
+  return best;
+}

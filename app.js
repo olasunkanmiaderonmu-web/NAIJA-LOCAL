@@ -73,27 +73,44 @@ function renderFooter(){
   <span>&copy; ${new Date().getFullYear()} Naija Local. Naija Local does not guarantee transactions between buyers and sellers.</span>
   <span class="d-flex gap-3"><a href="safety.html">Safety Guidelines</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></span></div></footer>`;
 }
-async function updateAuthLinks(){
-  const box = $('authLinks'); if (!box || !sb) return;
-  const { data: { session } } = await sb.auth.getSession(); if (!session) return;
-  const { data: p } = await sb.from('profiles').select('full_name,profile_image,role').eq('id', session.user.id).maybeSingle();
-  const name = (p && p.full_name) || 'Account';
-  const { count: unread } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false);
+/* The header never shows Sign in / Sign up to someone who is logged in:
+   a tiny script in every page's <head> adds the class "has-session" when a login is stored, and CSS hides the
+   guest buttons behind a soft placeholder until the real name and photo are ready (usually from a saved copy). */
+function paintUser(box, u, first){
   box.innerHTML = `<div class="dropdown"><button class="btn btn-sm text-white d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
-   ${p && p.profile_image ? `<img src="${esc(p.profile_image)}" class="avatar-sm" alt="">` : '<i class="bi bi-person-circle fs-4"></i>'}
-   <span>${esc(name.split(' ')[0])}</span></button>
+   ${u.img ? `<img src="${esc(u.img)}" class="avatar-sm" alt="">` : '<i class="bi bi-person-circle fs-4"></i>'}
+   <span>${esc((u.name || 'Account').split(' ')[0])}</span></button>
    <ul class="dropdown-menu dropdown-menu-end">
    <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person"></i> My Profile</a></li>
    <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
    <li><a class="dropdown-item" href="favourites.html"><i class="bi bi-heart"></i> My Favourites</a></li>
-   <li><a class="dropdown-item" href="notifications.html"><i class="bi bi-bell"></i> Notifications${unread ? ` <span class="badge text-bg-warning">${unread}</span>` : ''}</a></li>
-   ${p && p.role === 'admin' ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-shield-lock"></i> Admin</a></li>' : ''}
+   <li><a class="dropdown-item" href="notifications.html"><i class="bi bi-bell"></i> Notifications${u.unread ? ` <span class="badge text-bg-warning">${u.unread}</span>` : ''}</a></li>
+   ${u.role === 'admin' ? '<li><a class="dropdown-item" href="admin.html"><i class="bi bi-shield-lock"></i> Admin</a></li>' : ''}
    <li><hr class="dropdown-divider"></li><li><button class="dropdown-item" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Log out</button></li></ul></div>`;
+  box.classList.add('ready'); if (first) box.classList.add('auth-in');
   $('logoutBtn').onclick = async () => { await sb.auth.signOut(); location.href = 'index.html'; };
 }
+async function updateAuthLinks(){
+  const box = $('authLinks'); if (!box) return;
+  const guest = () => { document.documentElement.classList.remove('has-session'); box.classList.add('ready'); };
+  if (!sb) return guest();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { localStorage.removeItem('nl_user'); return guest(); }
+  checkTerms(session.user.id);
+  let cached = null; try { cached = JSON.parse(localStorage.getItem('nl_user') || 'null'); } catch (e) {}
+  if (cached && cached.id === session.user.id) paintUser(box, cached, true);          // instant, from the saved copy
+  const [{ data: p }, { count: unread }] = await Promise.all([
+    sb.from('profiles').select('full_name,profile_image,role').eq('id', session.user.id).maybeSingle(),
+    sb.from('notifications').select('id', { count: 'exact', head: true }).eq('is_read', false)]);
+  const u = { id: session.user.id, name: (p && p.full_name) || 'Account', img: p && p.profile_image, role: p && p.role, unread: unread || 0 };
+  const same = cached && JSON.stringify(cached) === JSON.stringify(u);
+  try { localStorage.setItem('nl_user', JSON.stringify(u)); } catch (e) {}
+  if (!same) paintUser(box, u, !cached);
+}
+if (sb) sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT') { localStorage.removeItem('nl_user'); document.documentElement.classList.remove('has-session'); } });
 
 /* ---------- Phase 3 helpers ---------- */
-const PRODUCT_COLS = 'id,seller_id,category_id,product_name,description,price,negotiable,condition,quantity,status,primary_image,state,lga,public_location,contact_phone,whatsapp_number,contact_email,created_at';
+const PRODUCT_COLS = 'id,seller_id,category_id,product_name,description,price,negotiable,condition,quantity,status,primary_image,primary_thumb,state,lga,public_location,contact_phone,whatsapp_number,contact_email,created_at';
 const fmtNaira = n => '₦' + Number(n).toLocaleString('en-NG');
 const NO_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23e9e2d0'/%3E%3Ctext x='200' y='160' font-size='20' text-anchor='middle' fill='%23737373' font-family='sans-serif'%3ENo image%3C/text%3E%3C/svg%3E";
 function waLink(number, text){ return 'https://wa.me/' + String(number).replace(/\D/g, '') + '?text=' + encodeURIComponent(text); }
@@ -122,7 +139,7 @@ const catIcon = slug => (CATEGORY_META.find(c => c[0] === slug) || [0, 'grid'])[
 function categoryCard(c){ return `<a class="cat-card" href="explore.html?category=${esc(c.slug)}"><i class="bi bi-${catIcon(c.slug)}"></i><span>${esc(c.name)}</span></a>`; }
 /* one product card, used on the homepage and Explore (row shape = nearby_products) */
 function productCard(p){
-  return `<article class="pcard"><div class="position-relative"><img class="pi" src="${esc(p.primary_image || NO_IMG)}" alt="${esc(p.product_name)}" loading="lazy">
+  return `<article class="pcard"><div class="position-relative"><img class="pi" src="${esc(p.primary_thumb || p.primary_image || NO_IMG)}" alt="${esc(p.product_name)}" loading="lazy" decoding="async" width="400" height="300">
    <span class="badge ${p.negotiable ? 'badge-neg' : 'badge-fix'} position-absolute top-0 start-0 m-2">${p.negotiable ? 'Negotiable' : 'Fixed price'}</span>
    <button type="button" class="fav-btn" data-fav="${p.id}" aria-label="Save to favourites" aria-pressed="false"><i class="bi bi-heart"></i></button></div>
    <div class="p-3 d-flex flex-column flex-grow-1"><h3 class="h6 mb-1 ptitle">${esc(p.product_name)}</h3><div class="price">${fmtNaira(p.price)}</div>
@@ -133,7 +150,7 @@ function productCard(p){
 }
 function miniRow(p){
   return `<a href="product.html?id=${p.id}" class="d-flex align-items-center gap-3 p-2 rounded-3 text-decoration-none" style="background:var(--cream);color:var(--charcoal)">
-   <img src="${esc(p.primary_image || NO_IMG)}" alt="" width="56" height="56" class="rounded-3" style="object-fit:cover" loading="lazy">
+   <img src="${esc(p.primary_thumb || p.primary_image || NO_IMG)}" alt="" width="56" height="56" decoding="async" class="rounded-3" style="object-fit:cover" loading="lazy">
    <span class="flex-grow-1"><strong>${esc(p.product_name)}</strong><br><span class="pmeta">${esc(p.public_location || '')}</span></span><span class="price fs-6">${fmtNaira(p.price)}</span></a>`;
 }
 
@@ -189,13 +206,102 @@ function renderAdminSidebar(active){
   <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="sideMenu"><div class="offcanvas-header"><h2 class="offcanvas-title h5">Admin</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sideMenu" aria-label="Close"></button></div>
   <div class="offcanvas-body"><nav class="side-nav w-100" aria-label="Admin">${L.map(([h, t, i]) => `<a href="${h}" class="${h === active ? 'active' : ''}"><i class="bi bi-${i}"></i> ${t}</a>`).join('')}</nav></div></div>`;
 }
+/* Rolling announcement bar. Text is repeated so the loop is seamless; speed is the same for short and long messages. */
+function tickerHTML(text){
+  const t = esc(text), perItem = text.length * 8.5 + 90, reps = Math.max(2, Math.ceil(1500 / perItem));
+  const item = `<span class="tk-item"><i class="bi bi-megaphone-fill"></i><span>${t}</span><span class="tk-dot"></span></span>`;
+  const group = `<div class="tk-group">${item.repeat(reps)}</div>`, dur = Math.max(14, Math.round(reps * perItem / 70));
+  return `<div class="announce" role="status" aria-label="Announcement: ${t}"><div class="ticker" style="--dur:${dur}s"><div class="tk-track">${group}${group.replace('class="tk-group"', 'class="tk-group" aria-hidden="true"')}</div></div></div>`;
+}
+function setAnnouncement(text){
+  const old = document.querySelector('.announce'), nav = document.querySelector('nav.navbar');
+  if (old && old.dataset.text === text) return;
+  if (old) old.remove();
+  if (!text || !nav) return;
+  nav.insertAdjacentHTML('afterend', tickerHTML(text)); document.querySelector('.announce').dataset.text = text;
+}
 async function applySettings(){
+  try { setAnnouncement(localStorage.getItem('nl_announce') || ''); } catch (e) {}          // show the last known message instantly
   if (!sb) return;
   const { data } = await sb.from('platform_settings').select('key,value'); const m = {}; (data || []).forEach(r => m[r.key] = r.value);
-  if (m.announcement && !document.querySelector('.announce')) {
-    const nav = document.querySelector('nav.navbar'); if (nav) nav.insertAdjacentHTML('afterend', `<div class="announce" role="status">${esc(m.announcement)}</div>`);
-  }
+  setAnnouncement(m.announcement || '');
+  try { localStorage.setItem('nl_announce', m.announcement || ''); } catch (e) {}
   const wa = normalizePhone(m.contact_whatsapp);
   if (wa) document.querySelectorAll('a[href^="https://wa.me/"]').forEach(a => a.href = 'https://wa.me/' + wa.replace('+', ''));
   if (m.contact_email) document.querySelectorAll('a[href^="mailto:"]').forEach(a => { a.href = 'mailto:' + m.contact_email; if (a.textContent.includes('@')) a.innerHTML = '<i class="bi bi-envelope"></i> ' + esc(m.contact_email); });
+}
+
+/* ---------- Phase 8: installable app (PWA) ---------- */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+let deferredInstall = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const installDismissed = () => Date.now() - Number(localStorage.getItem('nl_install_no') || 0) < 14 * 864e5;   // ask again after 14 days
+function hideInstallBar(remember){ const b = $('installBar'); if (b) b.remove(); if (remember) localStorage.setItem('nl_install_no', Date.now()); }
+function showInstallBar(text, withButton){
+  if ($('installBar') || isStandalone() || installDismissed() || document.querySelector('.auth-wrap')) return;
+  document.body.insertAdjacentHTML('beforeend', `<div id="installBar" class="install-bar" role="dialog" aria-label="Install Naija Local">
+    <img src="icons/icon-192.png" alt="" width="44" height="44"><div class="flex-grow-1 small">${text}</div>
+    ${withButton ? '<button class="btn btn-gold btn-sm" id="installGo" type="button">Install</button>' : ''}
+    <button class="btn btn-sm text-white" id="installNo" type="button" aria-label="Not now">Not now</button></div>`);
+  $('installNo').onclick = () => hideInstallBar(true);
+  if (withButton) $('installGo').onclick = async () => { if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; hideInstallBar(false); };
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; setTimeout(() => showInstallBar('<strong>Install Naija Local</strong><br>Faster access from your home screen.', true), 6000); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; hideInstallBar(false); });
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent)) {   // iPhone Safari has no install button, so explain the steps
+  window.addEventListener('load', () => setTimeout(() => showInstallBar('<strong>Add Naija Local to your home screen</strong><br>Tap <i class="bi bi-box-arrow-up"></i> Share, then <strong>Add to Home Screen</strong>.', false), 8000));
+}
+
+
+/* ---------- Phase 9: motion ---------- */
+const REDUCE_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!REDUCE_MOTION) document.documentElement.classList.add('js-anim');
+const REVEAL_SEL = '.pcard,.cat-card,.howstep,.stat,.arow,.prow,.chart-card,.auth-card,.sell-band,.contact-card,.section-title,.side-nav,.rev';
+function countUp(el){
+  const target = parseFloat(String(el.textContent).replace(/,/g, '')); if (!isFinite(target) || el.dataset.cu) return; el.dataset.cu = '1';
+  if (REDUCE_MOTION || target === 0) return;
+  const t0 = performance.now(), dur = 900, whole = Number.isInteger(target);
+  (function tick(now){ const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (whole ? Math.round(target * e) : (target * e).toFixed(1)).toLocaleString('en-NG'); if (k < 1) requestAnimationFrame(tick); })(t0);
+}
+const revealIO = !REDUCE_MOTION && 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+  let n = 0;
+  entries.filter(e => e.isIntersecting).forEach(e => { e.target.style.setProperty('--d', Math.min(n++ * 70, 420) + 'ms'); e.target.classList.add('in'); revealIO.unobserve(e.target); });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }) : null;
+function scanMotion(root){
+  (root || document).querySelectorAll('.stat .n').forEach(countUp);
+  if (!revealIO) return;
+  (root || document).querySelectorAll(REVEAL_SEL).forEach(el => {
+    if (el.dataset.rv || el.closest('.modal,.offcanvas,.dropdown-menu,.phone-wrap')) return; el.dataset.rv = '1';
+    el.classList.add('reveal'); revealIO.observe(el);
+  });
+}
+let motionTimer; new MutationObserver(() => { clearTimeout(motionTimer); motionTimer = setTimeout(() => scanMotion(), 60); }).observe(document.documentElement, { childList: true, subtree: true });
+document.addEventListener('DOMContentLoaded', () => scanMotion());
+addEventListener('scroll', () => { const n = document.querySelector('nav.navbar'); if (n) n.classList.toggle('scrolled', scrollY > 8); }, { passive: true });
+
+
+/* ---------- Phase 10: terms record, safe links ---------- */
+const TERMS_VERSION = '2026-11';   // change this (e.g. '2027-03') after you update the Terms, and everyone is asked to accept again
+const safeLink = l => (typeof l === 'string' && /^\/[a-z0-9-]+\.html(\?[\w=&%.-]*)?$/i.test(l)) ? l.slice(1) : null;
+async function checkTerms(uid){
+  if (!sb || /\/(terms|privacy)\.html$/.test(location.pathname) || document.getElementById('termsModal')) return;
+  const key = 'nl_terms_' + uid; if (localStorage.getItem(key) === TERMS_VERSION) return;
+  const { data, error } = await sb.from('terms_acceptances').select('id').eq('user_id', uid).eq('version', TERMS_VERSION).maybeSingle();
+  if (error) return;                                              // table not created yet: never lock people out
+  if (data) { localStorage.setItem(key, TERMS_VERSION); return; }
+  document.body.insertAdjacentHTML('beforeend', `<div class="modal fade" id="termsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="tmTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+   <div class="modal-header"><h2 class="modal-title h5" id="tmTitle">Our Terms and Privacy Policy</h2></div>
+   <div class="modal-body"><p>Before you continue, please read and accept our <a href="terms.html" target="_blank" rel="noopener">Terms and Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+    <div class="form-check"><input class="form-check-input" type="checkbox" id="tmOk"><label class="form-check-label" for="tmOk">I have read and accept them.</label></div><div id="tmErr" class="text-danger small mt-2"></div></div>
+   <div class="modal-footer"><button class="btn btn-outline-secondary" id="tmOut" type="button">Log out</button><button class="btn btn-market" id="tmGo" type="button" disabled>Accept and continue</button></div></div></div></div>`);
+  const m = bootstrap.Modal.getOrCreateInstance(document.getElementById('termsModal')); m.show();
+  $('tmOk').onchange = () => $('tmGo').disabled = !$('tmOk').checked;
+  $('tmOut').onclick = async () => { await sb.auth.signOut(); location.href = 'index.html'; };
+  $('tmGo').onclick = async () => {
+    const { error: e2 } = await sb.rpc('accept_terms', { p_version: TERMS_VERSION, p_ua: navigator.userAgent.slice(0, 200) });
+    if (e2) return $('tmErr').textContent = friendlyError(e2);
+    localStorage.setItem(key, TERMS_VERSION); m.hide();
+  };
 }
